@@ -65,6 +65,8 @@ def build_review_zip():
         "CITATION.cff",
         "CONTRIBUTING.md",
         "SECURITY.md",
+        "NOTES.md",
+        ".gitattributes",
         ".gitignore",
         ".env.example"
     ]

@@ -122,17 +122,6 @@ def run_pipeline(market_name: str = "shandong", target_date: Optional[str] = Non
             logger.error(f"Download/Ingestion failed for date {d}: {e}")
             failed_dates.append((d, str(type(e).__name__)))
             continue
-        if meta.get("source") == "audit fault injection":
-            # Reviewer fault injection test: normalize date and remove simulated flag
-            # to allow testing downstream model/pipeline failure transactional rollback
-            normalized_df = normalized_df.copy()
-            normalized_df["date"] = d
-            normalized_df["timestamp"] = [
-                f"{d}T{str(ts).split('T')[1]}" if "T" in str(ts) else (f"{d} {str(ts).split(' ')[1]}" if " " in str(ts) else ts)
-                for ts in normalized_df["timestamp"]
-            ]
-            normalized_df["is_simulated"] = False
-            normalized_df["source_url"] = "https://pmos.shandong.gov.cn/spot/fault_injection"
 
         # Quality Audit Gate
         is_valid, quality_report = validator.validate_daily_spot_prices(normalized_df, market_name, d)
