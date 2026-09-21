@@ -33,3 +33,22 @@ markets:
       provider: "山西电力交易中心"
       url: "https://pmos.sx.sgcc.com.cn/"
       type: "day_ahead"
+
+  jiangsu:
+    name: "jiangsu"
+    display_name: "江苏电力现货市场"
+    timezone: "Asia/Shanghai"
+    interval_minutes: 15
+    periods_per_day: 96
+    currency: "RMB"
+    price_unit: "RMB/MWh"
+    price_limits:
+      min: 0.0
+      max: 1400.0
+    data_source:
+      provider: "江苏电力交易中心"
+      url: "https://pmos.js.sgcc.com.cn/"
+      type: "day_ahead"
+    characteristics:
+      pattern: "dual_peak"
+      storage_mode: "two_cycles_per_day"

@@ -84,17 +84,24 @@ class DashboardBuilder:
             today_deg_cost = round(float(bess_res.get("degradation_cost", 0.0)), 2)
             today_efc = round(float(bess_res.get("efc", 0.0)), 4)
 
+        market_display_map = {
+            "shandong": "山东电力现货市场 (Shandong Spot Market - 单深V负电价)",
+            "shanxi": "山西电力现货市场 (Shanxi Spot Market - 现货商业化标杆)",
+            "jiangsu": "江苏电力现货市场 (Jiangsu Spot Market - 双峰两充两放)"
+        }
+        market_display = market_display_map.get(market, f"{market.capitalize()} 电力现货市场")
+
         # 4. JSON Payload for Frontend Embedding
         payload = {
             "meta": {
                 "market": market,
-                "market_display": "山东电力现货市场 (Shandong Spot Market)",
+                "market_display": market_display,
                 "latest_date": latest_date,
                 "tracked_days": int(metrics_df["date"].nunique()),
                 "currency": "RMB",
                 "price_unit": "RMB/MWh",
                 "is_simulated": True,
-                "benchmark_mode": "Synthetic Duck Curve Benchmark Prototype"
+                "benchmark_mode": f"{market.capitalize()} 15-Minute Clearing Benchmark Prototype"
             },
             "today_kpi": {
                 "mean_price": latest_metrics.get("mean_price", 0.0),

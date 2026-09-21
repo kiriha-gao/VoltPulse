@@ -4,6 +4,7 @@ import pytest
 import pandas as pd
 
 from voltpulse.ingestion.shandong import ShandongAdapter
+from voltpulse.ingestion.jiangsu import JiangsuAdapter
 from voltpulse.storage.schemas import SPOT_PRICE_COLUMNS
 
 
@@ -61,3 +62,33 @@ def test_shandong_adapter_invalid_csv(temp_raw_dir):
     adapter = ShandongAdapter(config, temp_raw_dir)
     with pytest.raises(Exception):
         adapter.parse(b"corrupted,binary,\x00\xff\xfe", "2026-08-01", {})
+
+
+def test_jiangsu_adapter_ingest_from_fixture(temp_raw_dir):
+    fixture_js = Path(__file__).resolve().parent / "fixtures" / "jiangsu_sample.csv"
+    assert fixture_js.exists(), "Jiangsu benchmark fixture must exist"
+
+    config = {
+        "name": "jiangsu",
+        "data_source": {
+            "provider": "江苏电力交易中心",
+            "url": "https://pmos.js.sgcc.com.cn/"
+        }
+    }
+    adapter = JiangsuAdapter(config, temp_raw_dir, fixture_path=fixture_js)
+    target_date = "2026-08-01"
+
+    normalized_df, metadata = adapter.ingest_date(target_date)
+
+    assert len(normalized_df) == 96
+    assert list(normalized_df.columns) == SPOT_PRICE_COLUMNS
+    assert (normalized_df["market"] == "jiangsu").all()
+    assert (normalized_df["date"] == target_date).all()
+    assert (normalized_df["interval"] == 15).all()
+    assert (normalized_df["price_type"] == "day_ahead").all()
+    assert (normalized_df["is_simulated"] == True).all()
+
+    # Verify archiving
+    archive_dir = temp_raw_dir / "jiangsu" / "2026" / "08" / target_date
+    assert (archive_dir / "original.csv").exists()
+    assert (archive_dir / "metadata.json").exists()

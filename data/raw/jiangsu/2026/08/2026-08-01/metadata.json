@@ -1,0 +1,22 @@
+{
+  "market": "jiangsu",
+  "date": "2026-08-01",
+  "source": "VoltPulse Jiangsu Benchmark (Dual-Peak Simulation)",
+  "source_url": "fixture://jiangsu/dual_peak_sample",
+  "status": "SUCCESS",
+  "latest_sha256": "9a3c641f55c9ca88455b13c4658cb94db2a06fcce3785e7330a70e4ac7db98e0",
+  "sha256": "9a3c641f55c9ca88455b13c4658cb94db2a06fcce3785e7330a70e4ac7db98e0",
+  "latest_file": "original.csv",
+  "file_name": "original.csv",
+  "retrieved_at": "2026-09-21T18:55:00.674134+08:00",
+  "revisions": [
+    {
+      "revision_id": 0,
+      "file_name": "original.csv",
+      "sha256": "9a3c641f55c9ca88455b13c4658cb94db2a06fcce3785e7330a70e4ac7db98e0",
+      "size_bytes": 16386,
+      "retrieved_at": "2026-09-21T18:54:27.728159+08:00",
+      "status": "SUCCESS"
+    }
+  ]
+}

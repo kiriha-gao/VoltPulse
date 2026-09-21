@@ -38,7 +38,7 @@ jobs:
 
       - name: 4. Build Clean Public Dashboard
         run: |
-          python scripts/build_dashboard.py --market shandong
+          python scripts/build_dashboard.py --market jiangsu
 
       - name: 5. Configure GitHub Pages
         uses: actions/configure-pages@v4

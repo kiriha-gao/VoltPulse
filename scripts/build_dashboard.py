@@ -41,8 +41,11 @@ def build(market: str = "shandong"):
             prices_df = None
 
     if prices_df is None:
-        logger.info("Using 14-day benchmark dataset from tests/fixtures/shandong_sample.csv...")
-        fixture_path = project_root / "tests" / "fixtures" / "shandong_sample.csv"
+        fixture_filename = f"{market}_sample.csv"
+        fixture_path = project_root / "tests" / "fixtures" / fixture_filename
+        if not fixture_path.exists():
+            fixture_path = project_root / "tests" / "fixtures" / "shandong_sample.csv"
+        logger.info(f"Using 14-day benchmark dataset from {fixture_path.name} for market={market}...")
         prices_df = pd.read_csv(fixture_path)
         from voltpulse.analytics.price_metrics import PriceMetricsCalculator
         from voltpulse.backtest.engine import BacktestEngine

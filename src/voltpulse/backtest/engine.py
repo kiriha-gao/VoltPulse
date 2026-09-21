@@ -82,6 +82,17 @@ class BacktestEngine:
 
         daily_records: List[Dict[str, Any]] = []
 
+        # Initialize market-specific fixed strategy windows if configured
+        fixed_cfg = self.benchmark_config.get("fixed_strategy", {})
+        market_cfg = fixed_cfg.get("markets", {}).get(market, {})
+        c_windows = market_cfg.get("charging_windows") if "charging_windows" in market_cfg else fixed_cfg.get("charging_windows")
+        d_windows = market_cfg.get("discharging_windows") if "discharging_windows" in market_cfg else fixed_cfg.get("discharging_windows")
+        market_fixed_strategy = FixedPeakValleyStrategy(
+            optimizer_params=self.storage_config,
+            charging_windows=c_windows,
+            discharging_windows=d_windows
+        )
+
         for d in unique_dates:
             day_df = df[df["date"] == d].sort_values(by="timestamp").reset_index(drop=True)
             interval_min = int(day_df["interval"].iloc[0]) if "interval" in day_df.columns else 15
@@ -131,7 +142,7 @@ class BacktestEngine:
             })
 
             # 2. Strategy 2: Fixed Peak-Valley Rule-based Benchmark Strategy
-            res_fixed = self.fixed_strategy.simulate(prices, timestamps, interval_minutes=interval_min)
+            res_fixed = market_fixed_strategy.simulate(prices, timestamps, interval_minutes=interval_min)
             daily_records.append({
                 "market": market,
                 "date": d,
