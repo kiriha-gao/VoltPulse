@@ -23,6 +23,8 @@ def test_pipeline_fixture_jiangsu_execution():
 
 def test_pipeline_live_mode_handles_missing_dates_safely():
     """Verify live mode gracefully handles uncontactable endpoints without crashing."""
-    # When no online connectivity exists or dates unavailable, it must return exit code 1 safely
-    exit_code = run_pipeline(market_name="shandong", target_date="2099-01-01", mode="live", backfill_days=1)
-    assert exit_code == 1
+    from unittest.mock import patch
+    import requests
+    with patch("voltpulse.ingestion.downloader.RobustDownloader.get", side_effect=requests.ConnectionError("Mocked network unreachable")):
+        exit_code = run_pipeline(market_name="shandong", target_date="2099-01-01", mode="live", backfill_days=1)
+        assert exit_code == 1

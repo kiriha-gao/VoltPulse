@@ -146,6 +146,8 @@ def run_pipeline(market_name: str = "shandong", target_date: Optional[str] = Non
         except Exception as e:
             logger.error(f"Download/Ingestion failed for date {d}: {e}")
             failed_dates.append((d, str(type(e).__name__)))
+            if mode == "live":
+                break
             continue
 
         # Quality Audit Gate
@@ -166,6 +168,8 @@ def run_pipeline(market_name: str = "shandong", target_date: Optional[str] = Non
         if not is_valid:
             logger.error(f"Quality gate rejected {d}: {quality_report.get('issues')}")
             failed_dates.append((d, "QUALITY_GATE_FAILURE"))
+            if mode == "live":
+                break
             continue
 
         # Atomic Storage Update

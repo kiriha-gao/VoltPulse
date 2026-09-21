@@ -128,8 +128,8 @@ def run_acceptance() -> int:
     # G4: Automated Pipeline & Health Status Beacon
     # -------------------------------------------------------------
     logger.info("Auditing Gate G4: Pipeline In Live & Fixture Sandbox...")
-    cmd_g4_fix = f"{py_exec} scripts/pipeline.py --mode fixture"
-    cmd_g4_live = f"{py_exec} scripts/pipeline.py --mode live"
+    cmd_g4_fix = f"{py_exec} scripts/pipeline.py --mode fixture --backfill-days 1"
+    cmd_g4_live = f"{py_exec} scripts/pipeline.py --mode live --backfill-days 1"
     code_fix, out_fix, elapsed_fix = run_cmd(cmd_g4_fix)
     code_live, out_live, elapsed_live = run_cmd(cmd_g4_live)
 

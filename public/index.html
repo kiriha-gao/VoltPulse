@@ -4,7 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>VoltPulse - 中国电力现货市场与储能运行分析平台</title>
-  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+  <script src="vendor/echarts.min.js"></script>
+  <script>
+    if (typeof echarts === 'undefined') {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js';
+      document.head.appendChild(s);
+    }
+  </script>
   <style>
     :root {
       --bg: #090d16;
@@ -200,6 +207,7 @@
       <button class="tab-btn" onclick="switchTab('market')">② 现货电价 (Market)</button>
       <button class="tab-btn" onclick="switchTab('storage')">③ 储能调度 (Storage)</button>
       <button class="tab-btn" onclick="switchTab('backtest')">④ 滚动回测 (Backtest)</button>
+      <button class="tab-btn" onclick="switchTab('comparison')">⑤ 策略对比与时滞失真压力测试 (Comparison & Stress)</button>
     </div>
 
     <!-- Section 1: Overview Tab (Answering the 5 Questions) -->
@@ -293,7 +301,7 @@
     <div id="tab-backtest" style="display: none;">
       <div class="chart-card">
         <div class="chart-header">
-          <span class="chart-title">策略回测累计净收益对比 (14 Days Cumulative PnL)</span>
+          <span class="chart-title">三策略回测累计净收益对比 (14 Days Cumulative PnL)</span>
         </div>
         <div id="chart-backtest-cum" class="chart-container"></div>
       </div>
@@ -305,6 +313,81 @@
       </div>
     </div>
 
+    <!-- Section 5: Comparison & Stress Test Tab -->
+    <div id="tab-comparison" style="display: none;">
+      <!-- Three Strategy Performance Table -->
+      <div class="hero-panel">
+        <div class="meta-row">
+          <span>三策略 14 天平稳期表现横向对比 (100MW / 200MWh 机组)</span>
+          <span>严格因果时序 · 零未来信息泄露</span>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">① 事后理论最优 (MILP)</div>
+            <div class="kpi-val" style="color: var(--accent-green)" id="kpi-comp-pf">-</div>
+            <div class="kpi-sub">基准标尺 (100% 理论上限)</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">② 日前历史滞后策略</div>
+            <div class="kpi-val" style="color: var(--accent-blue)" id="kpi-comp-hist">-</div>
+            <div class="kpi-sub" id="kpi-comp-hist-sub">平稳期捕获 96% 上限</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">③ 固定时段启发式策略</div>
+            <div class="kpi-val" style="color: var(--text-muted)" id="kpi-comp-fixed">-</div>
+            <div class="kpi-sub" id="kpi-comp-fixed-sub">仅捕获约 37% 上限</div>
+          </div>
+        </div>
+
+        <!-- Research Questions Cards -->
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-top: 12px;">
+          <h4 style="color: var(--accent-amber); font-size: 0.875rem; margin-bottom: 6px;">💡 核心研究问题 1：固定时段充放电是否一直有效？</h4>
+          <p style="font-size: 0.8125rem; color: #d1d5db; line-height: 1.6;">
+            <strong>结论：否。</strong> 固定时段在传统分时电价下可提供基础避险，但在高比例光伏渗透的现代现货市场（如山东单深V“鸭子曲线”）下严重钝化。在 14 天回测中，固定策略总收益仅为 63.8 万元（理论上限为 173.8 万元），大量错失午间光伏低谷（甚至负电价时段）的廉价充电良机，捕获率不足 40%。
+          </p>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-top: 12px;">
+          <h4 style="color: var(--accent-blue); font-size: 0.875rem; margin-bottom: 6px;">💡 核心研究问题 2：利用前一天已获得的价格调整次日时段，能否改善结果？</h4>
+          <p style="font-size: 0.8125rem; color: #d1d5db; line-height: 1.6;">
+            <strong>结论：平稳期极优，转折期致命。</strong> 在日间负荷和天气特征连续自相关时，历史滞后策略自适应追踪午间低谷，14天斩获 166.9 万元净利（捕获 96% 理论上限），较固定时段大增 +161.5%；然而，一旦遇上天气或电网运行突变，纯滞后策略将出现灾难性的“时滞滞后失真”。
+          </p>
+        </div>
+      </div>
+
+      <!-- Stress Test Card -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <span class="chart-title" style="color: var(--accent-rose)">⚠️ 突发转折场景压力测试 (Regime-Shift Stress Test)</span>
+          <span class="badge" style="color: var(--accent-rose); border-color: var(--accent-rose)">晴转阴风暴测试</span>
+        </div>
+        <div style="font-size: 0.8125rem; color: #9ca3af; margin-bottom: 12px;">
+          <strong>场景设定</strong>：Day 1 为典型晴天鸭子曲线（午间光伏大发低至 -20 元，晚高峰 800 元）；Day 2 突发重阴雨且夜间风电大发（午间电价暴涨至 900 元，晚间电价暴跌至 50 元）。
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card" style="border-color: rgba(244, 63, 94, 0.4); background: rgba(244, 63, 94, 0.05);">
+            <div class="kpi-label" style="color: var(--accent-rose)">日前历史滞后策略 (Day 2)</div>
+            <div class="kpi-val" style="color: var(--accent-rose)">- ¥ 167,119</div>
+            <div class="kpi-sub" style="color: #fca5a5">单日巨额亏损 (时滞失真)</div>
+          </div>
+          <div class="kpi-card" style="border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.05);">
+            <div class="kpi-label" style="color: var(--accent-green)">事后理论最优 (Day 2)</div>
+            <div class="kpi-val" style="color: var(--accent-green)">+ ¥ 105,779</div>
+            <div class="kpi-sub" style="color: #6ee7b7">自适应调度依然盈利</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">单日策略回撤差距 (Gap)</div>
+            <div class="kpi-val" style="color: var(--accent-amber)">¥ 272,899</div>
+            <div class="kpi-sub">单日差距逾 27 万元</div>
+          </div>
+        </div>
+        <div class="notes-box" style="border-left-color: var(--accent-rose); margin-top: 8px;">
+          <strong>时滞失真机理</strong>：滞后策略盲目复现前日排程，在 Day 2 午间 900 元/MWh 最贵峰值强行充电 173 MWh（购电耗费 15.6 万元），并在晚间 50 元/MWh 最低谷放电（收入仅 7,380 元），加之 1.8 万元电芯衰减折旧，单日巨亏 16.7 万元！<br/>
+          <strong>工程启示</strong>：单纯“看昨日调今日”无法抗御天气突变风险，现货储能套利必须依托日前气象与功率预测模型。
+        </div>
+      </div>
+    </div>
+
     <div class="notes-box">
       <strong>学术与机理说明</strong>：
       本项目遵循《VoltPulse V1 项目实施规格书》。模型所采用的理论最优调度（Perfect Foresight）代表全知条件下的事后经济学上限，储能模拟参数严格绑定初末 50% SOC 约束与 85% 综合充放效率。
@@ -312,7 +395,7 @@
   </div>
 
   <script>
-    const DATA = {"meta": {"market": "jiangsu", "market_display": "江苏电力现货市场 (Jiangsu Spot Market - 双峰两充两放)", "latest_date": "2026-08-14", "tracked_days": 14, "currency": "RMB", "price_unit": "RMB/MWh", "is_simulated": true, "benchmark_mode": "Jiangsu 15-Minute Clearing Benchmark Prototype"}, "today_kpi": {"mean_price": 620.46, "max_price": 1200.0, "min_price": 256.0, "peak_valley_spread": 944.0, "negative_price_periods": 0, "negative_price_hours": 0.0, "bess_net_profit": 161504.96, "bess_gross_profit": 180704.96, "bess_degradation_cost": 19200.0, "bess_efc": 1.6}, "intraday": {"timestamps": ["00:00", "00:15", "00:30", "00:45", "01:00", "01:15", "01:30", "01:45", "02:00", "02:15", "02:30", "02:45", "03:00", "03:15", "03:30", "03:45", "04:00", "04:15", "04:30", "04:45", "05:00", "05:15", "05:30", "05:45", "06:00", "06:15", "06:30", "06:45", "07:00", "07:15", "07:30", "07:45", "08:00", "08:15", "08:30", "08:45", "09:00", "09:15", "09:30", "09:45", "10:00", "10:15", "10:30", "10:45", "11:00", "11:15", "11:30", "11:45", "12:00", "12:15", "12:30", "12:45", "13:00", "13:15", "13:30", "13:45", "14:00", "14:15", "14:30", "14:45", "15:00", "15:15", "15:30", "15:45", "16:00", "16:15", "16:30", "16:45", "17:00", "17:15", "17:30", "17:45", "18:00", "18:15", "18:30", "18:45", "19:00", "19:15", "19:30", "19:45", "20:00", "20:15", "20:30", "20:45", "21:00", "21:15", "21:30", "21:45", "22:00", "22:15", "22:30", "22:45", "23:00", "23:15", "23:30", "23:45"], "prices": [256.0, 259.01, 261.98, 264.87, 267.62, 270.2, 272.58, 274.71, 276.57, 278.14, 279.38, 280.27, 280.82, 281.0, 280.82, 280.27, 279.38, 278.14, 276.57, 274.71, 272.58, 270.2, 267.62, 264.87, 261.98, 259.01, 280.0, 310.07, 354.04, 405.43, 462.32, 523.68, 588.85, 657.38, 728.92, 803.2, 920.0, 969.44, 1014.05, 1049.44, 1072.17, 1080.0, 1072.17, 1049.44, 1014.05, 969.44, 690.0, 650.98, 613.46, 578.89, 548.58, 523.71, 505.22, 493.84, 490.0, 493.84, 505.22, 523.71, 548.58, 578.89, 613.46, 650.98, 540.0, 571.67, 603.33, 635.0, 666.67, 698.33, 730.0, 761.67, 793.33, 825.0, 856.67, 888.33, 980.0, 1036.94, 1090.0, 1135.56, 1170.53, 1192.5, 1200.0, 1192.5, 1170.53, 1135.56, 1090.0, 1036.94, 850.0, 798.0, 746.0, 694.0, 642.0, 590.0, 538.0, 486.0, 434.0, 382.0], "charge_mw": [100.0, 100.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 47.07, 100.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 94.14, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 47.07, 100.0, 100.0, 100.0], "discharge_mw": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0, 100.0, 100.0, 100.0, 100.0, 90.08, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0, 100.0, 100.0, 100.0, 100.0, 90.08, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "soc_percent": [61.5, 73.0, 73.0, 73.0, 73.0, 73.0, 73.0, 73.0, 73.0, 73.0, 73.0, 73.0, 73.0, 73.0, 73.0, 73.0, 73.0, 73.0, 73.0, 73.0, 73.0, 73.0, 73.0, 73.0, 78.5, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 76.4, 62.9, 49.3, 35.8, 22.2, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 20.8, 32.4, 43.9, 55.4, 66.9, 78.5, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 76.4, 62.9, 49.3, 35.8, 22.2, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 15.4, 26.9, 38.5, 50.0]}, "history": {"dates": ["2026-08-01", "2026-08-02", "2026-08-03", "2026-08-04", "2026-08-05", "2026-08-06", "2026-08-07", "2026-08-08", "2026-08-09", "2026-08-10", "2026-08-11", "2026-08-12", "2026-08-13", "2026-08-14"], "daily_pnl_pf": [147654.93, 145398.97, 162719.71, 162025.56, 163240.31, 160984.35, 163760.92, 145398.97, 146613.72, 162025.56, 163240.31, 160984.35, 163760.92, 161504.96], "daily_pnl_fixed": [64033.34, 62645.05, 69656.83, 69830.37, 70177.44, 68789.15, 70698.05, 62645.05, 62992.13, 69830.37, 70177.44, 68789.15, 70698.05, 69309.76], "cumulative_pnl_pf": [147654.93, 293053.9, 455773.61, 617799.17, 781039.48, 942023.83, 1105784.75, 1251183.72, 1397797.44, 1559823.0, 1723063.31, 1884047.66, 2047808.58, 2209313.54], "cumulative_pnl_fixed": [64033.34, 126678.39, 196335.22, 266165.59, 336343.03, 405132.18, 475830.23, 538475.28, 601467.41, 671297.78, 741475.22, 810264.37, 880962.42, 950272.18], "spread_trend": [934.0, 928.0, 938.0, 950.0, 944.0, 938.0, 950.0, 928.0, 922.0, 950.0, 944.0, 938.0, 950.0, 944.0]}};
+    const DATA = {"meta": {"market": "shandong", "market_display": "山东电力现货市场 (Shandong Spot Market - 单深V负电价)", "latest_date": "2026-08-14", "tracked_days": 14, "currency": "RMB", "price_unit": "RMB/MWh", "is_simulated": true, "benchmark_mode": "Shandong 15-Minute Clearing Benchmark Prototype"}, "today_kpi": {"mean_price": 301.19, "max_price": 870.0, "min_price": -65.0, "peak_valley_spread": 935.0, "negative_price_periods": 15, "negative_price_hours": 3.75, "bess_net_profit": 136323.8, "bess_gross_profit": 155523.8, "bess_degradation_cost": 19200.0, "bess_efc": 1.6}, "intraday": {"timestamps": ["00:00", "00:15", "00:30", "00:45", "01:00", "01:15", "01:30", "01:45", "02:00", "02:15", "02:30", "02:45", "03:00", "03:15", "03:30", "03:45", "04:00", "04:15", "04:30", "04:45", "05:00", "05:15", "05:30", "05:45", "06:00", "06:15", "06:30", "06:45", "07:00", "07:15", "07:30", "07:45", "08:00", "08:15", "08:30", "08:45", "09:00", "09:15", "09:30", "09:45", "10:00", "10:15", "10:30", "10:45", "11:00", "11:15", "11:30", "11:45", "12:00", "12:15", "12:30", "12:45", "13:00", "13:15", "13:30", "13:45", "14:00", "14:15", "14:30", "14:45", "15:00", "15:15", "15:30", "15:45", "16:00", "16:15", "16:30", "16:45", "17:00", "17:15", "17:30", "17:45", "18:00", "18:15", "18:30", "18:45", "19:00", "19:15", "19:30", "19:45", "20:00", "20:15", "20:30", "20:45", "21:00", "21:15", "21:30", "21:45", "22:00", "22:15", "22:30", "22:45", "23:00", "23:15", "23:30", "23:45"], "prices": [238.0, 241.92, 245.76, 249.48, 253.0, 256.26, 259.21, 261.8, 263.98, 265.72, 266.98, 267.74, 268.0, 267.74, 266.98, 265.72, 263.98, 261.8, 259.21, 256.26, 253.0, 249.48, 245.76, 241.92, 238.0, 234.08, 280.0, 331.76, 380.0, 421.42, 453.21, 473.19, 480.0, 473.19, 453.21, 421.42, 380.0, 331.76, 55.0, 40.32, 26.29, 12.94, 0.32, -11.54, -22.57, -32.73, -41.91, -50.0, -56.84, -62.11, -65.0, -62.11, -56.84, -50.0, -41.91, -32.73, -22.57, -11.54, 0.32, 12.94, 26.29, 40.32, 55.0, 70.31, 180.0, 221.67, 263.33, 305.0, 346.67, 388.33, 550.0, 612.43, 672.46, 727.78, 776.27, 816.07, 845.64, 863.85, 870.0, 863.85, 845.64, 816.07, 776.27, 727.78, 672.46, 612.43, 500.0, 476.0, 452.0, 428.0, 404.0, 380.0, 356.0, 332.0, 308.0, 284.0], "charge_mw": [100.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 47.07, 100.0, 100.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 94.14, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.0, 0.0, 0.0, -0.0, -0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.0, 0.0, 0.0, 0.0, 0.0, 47.07, 100.0, 100.0, 100.0], "discharge_mw": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0, 100.0, 100.0, 100.0, 100.0, 90.08, 0.0, -0.0, -0.0, -0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.0, -0.0, -0.0, -0.0, -0.0, -0.0, -0.0, -0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0, 100.0, 100.0, 100.0, 100.0, 90.08, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "soc_percent": [61.5, 61.5, 61.5, 61.5, 61.5, 61.5, 61.5, 61.5, 61.5, 61.5, 61.5, 61.5, 61.5, 61.5, 61.5, 61.5, 61.5, 61.5, 61.5, 61.5, 61.5, 61.5, 61.5, 66.9, 78.5, 90.0, 90.0, 90.0, 90.0, 90.0, 76.4, 62.9, 49.3, 35.8, 22.2, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 21.5, 33.0, 44.6, 56.1, 67.6, 79.2, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 76.4, 62.9, 49.3, 35.8, 22.2, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 15.4, 26.9, 38.5, 50.0]}, "history": {"dates": ["2026-08-01", "2026-08-02", "2026-08-03", "2026-08-04", "2026-08-05", "2026-08-06", "2026-08-07", "2026-08-08", "2026-08-09", "2026-08-10", "2026-08-11", "2026-08-12", "2026-08-13", "2026-08-14"], "daily_pnl_pf": [104265.42, 128947.8, 133026.62, 109558.99, 134414.91, 136323.8, 110253.13, 127559.52, 127038.91, 110947.27, 133026.62, 134935.52, 111641.42, 136323.8], "daily_pnl_fixed": [34962.56, 47980.82, 50367.3, 38650.56, 50367.3, 51668.82, 38650.56, 47980.82, 46679.3, 38650.56, 50367.3, 51668.82, 38650.56, 51668.82], "daily_pnl_hist": [34962.56, 128947.8, 133026.62, 109558.99, 134414.91, 136323.8, 110253.13, 127559.52, 127038.91, 110947.27, 133026.62, 134935.52, 111641.42, 136323.8], "cumulative_pnl_pf": [104265.42, 233213.22, 366239.84, 475798.83, 610213.74, 746537.54, 856790.67, 984350.19, 1111389.1, 1222336.37, 1355362.99, 1490298.51, 1601939.93, 1738263.73], "cumulative_pnl_fixed": [34962.56, 82943.38, 133310.68, 171961.24, 222328.54, 273997.36, 312647.92, 360628.74, 407308.04, 445958.6, 496325.9, 547994.72, 586645.28, 638314.1], "cumulative_pnl_hist": [34962.56, 163910.36, 296936.98, 406495.97, 540910.88, 677234.68, 787487.81, 915047.33, 1042086.24, 1153033.51, 1286060.13, 1420995.65, 1532637.07, 1668960.87], "spread_trend": [740.0, 885.0, 920.0, 790.0, 920.0, 935.0, 790.0, 885.0, 870.0, 790.0, 920.0, 935.0, 790.0, 935.0]}, "strategy_comparison": {"pf_total_pnl": 1738263.73, "hist_total_pnl": 1668960.87, "fixed_total_pnl": 638314.1, "pf_avg_pnl": 124161.7, "hist_avg_pnl": 119211.49, "fixed_avg_pnl": 45593.86, "hist_captured_pct": 96.0, "fixed_captured_pct": 36.7}, "stress_test": {"description": "光伏突变转折场景：前日深V鸭子曲线（午间深谷、晚间尖峰），次日突发重阴雨（午间光伏塌陷电价暴涨至900元，晚间强风电电价暴跌至50元）", "hist_pnl": -167119.04, "pf_pnl": 105779.47, "gap": 272898.51, "loss_mechanism": "历史滞后策略机械复现前日午间满充、晚间满放指令；在900元/MWh最高电价时强行充电，在50元/MWh最低电价时放电，叠加热耗寿命衰减，单日净亏损逾16.7万元！"}};
 
     // 1. Initialize KPIs
     document.getElementById("badge-date").innerText = DATA.meta.latest_date;
@@ -331,6 +414,21 @@
     document.getElementById("kpi-charge-cost").innerText = "¥ " + Number(DATA.today_kpi.bess_gross_profit * 0.3).toLocaleString('zh-CN', {maximumFractionDigits: 0});
     document.getElementById("kpi-deg-cost").innerText = "¥ " + Number(DATA.today_kpi.bess_degradation_cost).toLocaleString('zh-CN', {maximumFractionDigits: 0});
     document.getElementById("kpi-final-net").innerText = "¥ " + Number(DATA.today_kpi.bess_net_profit).toLocaleString('zh-CN', {maximumFractionDigits: 0});
+
+    // Comparison tab KPIs
+    if (DATA.strategy_comparison) {
+      const sc = DATA.strategy_comparison;
+      const elPf = document.getElementById("kpi-comp-pf");
+      const elHist = document.getElementById("kpi-comp-hist");
+      const elFixed = document.getElementById("kpi-comp-fixed");
+      if (elPf) elPf.innerText = "¥ " + Number(sc.pf_total_pnl).toLocaleString('zh-CN', {maximumFractionDigits: 0});
+      if (elHist) elHist.innerText = "¥ " + Number(sc.hist_total_pnl).toLocaleString('zh-CN', {maximumFractionDigits: 0});
+      if (elFixed) elFixed.innerText = "¥ " + Number(sc.fixed_total_pnl).toLocaleString('zh-CN', {maximumFractionDigits: 0});
+      const subHist = document.getElementById("kpi-comp-hist-sub");
+      const subFixed = document.getElementById("kpi-comp-fixed-sub");
+      if (subHist) subHist.innerText = `捕获率: ${sc.hist_captured_pct}% | 日均 ¥${Number(sc.hist_avg_pnl).toLocaleString('zh-CN', {maximumFractionDigits:0})}`;
+      if (subFixed) subFixed.innerText = `捕获率: ${sc.fixed_captured_pct}% | 日均 ¥${Number(sc.fixed_avg_pnl).toLocaleString('zh-CN', {maximumFractionDigits:0})}`;
+    }
 
     // 2. Render Charts
     let charts = {};
@@ -363,21 +461,21 @@
       });
       charts['price'] = priceChart;
 
-      // B. Storage Dispatch Chart
+      // B. Storage Optimization Chart
       const storageChart = echarts.init(document.getElementById('chart-overview-storage'));
       storageChart.setOption({
         tooltip: { trigger: 'axis', backgroundColor: '#111827', textStyle: { color: '#f3f4f6' }, borderColor: '#1f293d' },
-        legend: { data: ['充电功率', '放电功率', 'SOC (%)'], textStyle: { color: '#9ca3af' }, top: '0%' },
-        grid: { left: '3%', right: '4%', bottom: '8%', top: '15%', containLabel: true },
+        legend: { data: ['放电功率 (MW)', '充电功率 (MW)', 'SOC (%)'], textStyle: { color: '#9ca3af' } },
+        grid: { left: '3%', right: '4%', bottom: '8%', top: '12%', containLabel: true },
         xAxis: { type: 'category', data: DATA.intraday.timestamps, axisLine: { lineStyle: { color: '#4b5563' } } },
         yAxis: [
-          { type: 'value', name: '功率 (MW)', max: 100, min: 0, splitLine: { lineStyle: { color: '#1f293d' } } },
-          { type: 'value', name: 'SOC (%)', max: 100, min: 0, position: 'right', splitLine: { show: false } }
+          { type: 'value', name: '功率 (MW)', splitLine: { lineStyle: { color: '#1f293d' } } },
+          { type: 'value', name: 'SOC (%)', min: 0, max: 100, splitLine: { show: false } }
         ],
         series: [
-          { name: '充电功率', type: 'bar', stack: 'power', data: DATA.intraday.charge_mw, itemStyle: { color: '#10b981' } },
-          { name: '放电功率', type: 'bar', stack: 'power', data: DATA.intraday.discharge_mw, itemStyle: { color: '#f59e0b' } },
-          { name: 'SOC (%)', type: 'line', yAxisIndex: 1, smooth: true, data: DATA.intraday.soc_percent, lineStyle: { width: 2, color: '#a855f7' } }
+          { name: '放电功率 (MW)', type: 'bar', stack: 'p', data: DATA.intraday.discharge_mw, itemStyle: { color: '#10b981' } },
+          { name: '充电功率 (MW)', type: 'bar', stack: 'p', data: DATA.intraday.charge_mw.map(v => -v), itemStyle: { color: '#f59e0b' } },
+          { name: 'SOC (%)', type: 'line', yAxisIndex: 1, step: 'end', data: DATA.intraday.soc_percent, lineStyle: { width: 2, color: '#a855f7' } }
         ]
       });
       charts['storage'] = storageChart;
@@ -402,39 +500,56 @@
 
     function initBacktestCharts() {
       const cumChart = echarts.init(document.getElementById('chart-backtest-cum'));
+      const cumSeries = [
+        { name: '事后理论最优 (MILP)', type: 'line', smooth: true, data: DATA.history.cumulative_pnl_pf, lineStyle: { width: 3, color: '#10b981' } }
+      ];
+      const cumLegend = ['事后理论最优 (MILP)'];
+      if (DATA.history.cumulative_pnl_hist && DATA.history.cumulative_pnl_hist.length > 0) {
+        cumSeries.push({ name: '日前历史滞后策略 (Historical Adjusted)', type: 'line', smooth: true, data: DATA.history.cumulative_pnl_hist, lineStyle: { width: 2.5, color: '#38bdf8' } });
+        cumLegend.push('日前历史滞后策略 (Historical Adjusted)');
+      }
+      cumSeries.push({ name: '固定时段峰谷策略 (Fixed Benchmark)', type: 'line', smooth: true, data: DATA.history.cumulative_pnl_fixed, lineStyle: { width: 2, color: '#6b7280', type: 'dashed' } });
+      cumLegend.push('固定时段峰谷策略 (Fixed Benchmark)');
+
       cumChart.setOption({
         tooltip: { trigger: 'axis', backgroundColor: '#111827', textStyle: { color: '#f3f4f6' }, borderColor: '#1f293d' },
-        legend: { data: ['理论最优 (Perfect Foresight)', '固定峰谷策略 (Fixed Benchmark)'], textStyle: { color: '#9ca3af' } },
+        legend: { data: cumLegend, textStyle: { color: '#9ca3af' } },
         grid: { left: '3%', right: '4%', bottom: '8%', top: '15%', containLabel: true },
         xAxis: { type: 'category', data: DATA.history.dates, axisLine: { lineStyle: { color: '#4b5563' } } },
         yAxis: { type: 'value', name: '累计净收益 (RMB)', splitLine: { lineStyle: { color: '#1f293d' } } },
-        series: [
-          { name: '理论最优 (Perfect Foresight)', type: 'line', smooth: true, data: DATA.history.cumulative_pnl_pf, lineStyle: { width: 3, color: '#10b981' } },
-          { name: '固定峰谷策略 (Fixed Benchmark)', type: 'line', smooth: true, data: DATA.history.cumulative_pnl_fixed, lineStyle: { width: 2, color: '#9ca3af', type: 'dashed' } }
-        ]
+        series: cumSeries
       });
       charts['cum'] = cumChart;
 
       const dailyChart = echarts.init(document.getElementById('chart-backtest-daily'));
+      const dailySeries = [
+        { name: '理论最优日净利', type: 'bar', data: DATA.history.daily_pnl_pf, itemStyle: { color: '#10b981' } }
+      ];
+      const dailyLegend = ['理论最优日净利'];
+      if (DATA.history.daily_pnl_hist && DATA.history.daily_pnl_hist.length > 0) {
+        dailySeries.push({ name: '历史滞后日净利', type: 'bar', data: DATA.history.daily_pnl_hist, itemStyle: { color: '#38bdf8' } });
+        dailyLegend.push('历史滞后日净利');
+      }
+      dailySeries.push({ name: '固定策略日净利', type: 'bar', data: DATA.history.daily_pnl_fixed, itemStyle: { color: '#6b7280' } });
+      dailyLegend.push('固定策略日净利');
+
       dailyChart.setOption({
         tooltip: { trigger: 'axis', backgroundColor: '#111827', textStyle: { color: '#f3f4f6' }, borderColor: '#1f293d' },
-        legend: { data: ['理论最优日净利', '固定策略日净利'], textStyle: { color: '#9ca3af' } },
+        legend: { data: dailyLegend, textStyle: { color: '#9ca3af' } },
         grid: { left: '3%', right: '4%', bottom: '8%', top: '15%', containLabel: true },
         xAxis: { type: 'category', data: DATA.history.dates, axisLine: { lineStyle: { color: '#4b5563' } } },
         yAxis: { type: 'value', name: '日净利 (RMB)', splitLine: { lineStyle: { color: '#1f293d' } } },
-        series: [
-          { name: '理论最优日净利', type: 'bar', data: DATA.history.daily_pnl_pf, itemStyle: { color: '#38bdf8' } },
-          { name: '固定策略日净利', type: 'bar', data: DATA.history.daily_pnl_fixed, itemStyle: { color: '#6b7280' } }
-        ]
+        series: dailySeries
       });
       charts['daily'] = dailyChart;
     }
 
     // Tab Switcher
     function switchTab(tabId) {
-      const tabs = ['overview', 'market', 'storage', 'backtest'];
+      const tabs = ['overview', 'market', 'storage', 'backtest', 'comparison'];
       tabs.forEach(t => {
-        document.getElementById(`tab-${t}`).style.display = (t === tabId) ? 'block' : 'none';
+        const el = document.getElementById(`tab-${t}`);
+        if (el) el.style.display = (t === tabId) ? 'block' : 'none';
       });
       document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
         if (tabs[idx] === tabId) btn.classList.add('active');

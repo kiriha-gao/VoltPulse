@@ -145,3 +145,126 @@ class FixedPeakValleyStrategy:
             "max_soc": round(float(np.max(soc_traj)), 4),
             "final_soc": round(float(soc_traj[-1]), 4)
         }
+
+
+class HistoricalAdjustedStrategy:
+    """
+    Simulates a strictly causal, Day-Ahead Lagged Persistence Strategy (历史数据调整策略).
+    
+    Core Principle:
+      - Uses clearing price observations from Day d-1 to formulate the dispatch schedule.
+      - Dispatches Day d using Day d-1's plan without any future price knowledge of Day d.
+      - Strict battery physics: respects power limits P_rated, SOC limits [SOC_min, SOC_max], 
+        efficiency, and terminal SOC balance.
+      - Evaluated at Day d's actual spot clearing prices.
+    """
+
+    def __init__(self, optimizer_params: Optional[Dict[str, Any]] = None, **kwargs):
+        params = dict(optimizer_params or {})
+        params.update(kwargs)
+        self.power_mw = float(params.get("power_mw", 100.0))
+        self.energy_mwh = float(params.get("energy_mwh", 200.0))
+
+        default_eff = float(np.sqrt(0.85))
+        self.charge_eff = float(params.get("charge_efficiency", default_eff))
+        self.discharge_eff = float(params.get("discharge_efficiency", default_eff))
+        self.soc_min = float(params.get("soc_min", 0.10))
+        self.soc_max = float(params.get("soc_max", 0.90))
+        self.soc_initial = float(params.get("soc_initial", 0.50))
+        self.soc_final = float(params.get("soc_final", 0.50))
+        self.degradation_cost_per_mwh = float(params.get("degradation_cost_rmb_per_mwh", 30.0))
+
+        self.e_min = self.soc_min * self.energy_mwh
+        self.e_max = self.soc_max * self.energy_mwh
+        self.e_initial = self.soc_initial * self.energy_mwh
+        self.e_final = self.soc_final * self.energy_mwh
+
+        self.degradation_model = BatteryDegradationModel(
+            degradation_cost_per_mwh=self.degradation_cost_per_mwh,
+            nominal_energy_mwh=self.energy_mwh,
+            soc_min=self.soc_min,
+            soc_max=self.soc_max,
+            charge_efficiency=self.charge_eff,
+            discharge_efficiency=self.discharge_eff
+        )
+
+    def simulate(self, prices_today: np.ndarray,
+                 planned_charge_mw: np.ndarray,
+                 planned_discharge_mw: np.ndarray,
+                 interval_minutes: int = 15) -> Dict[str, Any]:
+        """
+        Executes physical forward dispatch on Day d based on schedule determined from Day d-1.
+        Strictly causal: Day d prices are only used for financial evaluation, not for dispatch decisions.
+        """
+        T = len(prices_today)
+        dt = float(interval_minutes) / 60.0
+
+        p_ch = np.zeros(T)
+        p_dis = np.zeros(T)
+        energy = np.zeros(T)
+        curr_e = self.e_initial
+
+        for t in range(T):
+            desired_ch = float(planned_charge_mw[t]) if t < len(planned_charge_mw) else 0.0
+            desired_dis = float(planned_discharge_mw[t]) if t < len(planned_discharge_mw) else 0.0
+
+            if desired_ch > 0 and curr_e < self.e_max:
+                max_ch_energy = (self.e_max - curr_e) / self.charge_eff
+                p_ch_val = min(desired_ch, self.power_mw, max_ch_energy / dt)
+                p_ch[t] = max(0.0, p_ch_val)
+                curr_e += self.charge_eff * p_ch[t] * dt
+
+            elif desired_dis > 0 and curr_e > self.e_min:
+                max_dis_energy = (curr_e - self.e_min) * self.discharge_eff
+                p_dis_val = min(desired_dis, self.power_mw, max_dis_energy / dt)
+                p_dis[t] = max(0.0, p_dis_val)
+                curr_e -= (p_dis[t] * dt) / self.discharge_eff
+
+            energy[t] = curr_e
+
+        # Terminal SOC verification & status
+        if abs(curr_e - self.e_final) > 1e-2:
+            status_label = "TERMINAL_ADJUSTED"
+        else:
+            status_label = "SUCCESS"
+
+        soc_traj = energy / self.energy_mwh
+        charge_energy_mwh = float(np.sum(p_ch) * dt)
+        discharge_energy_mwh = float(np.sum(p_dis) * dt)
+        cell_throughput_q = float(np.sum(self.charge_eff * p_ch + p_dis / self.discharge_eff) * dt)
+
+        gross_revenue = float(np.sum(prices_today * p_dis * dt))
+        charging_cost = float(np.sum(prices_today * p_ch * dt))
+        gross_profit = gross_revenue - charging_cost
+
+        deg_metrics = self.degradation_model.calculate_degradation(
+            charge_energy_mwh, discharge_energy_mwh, cell_throughput_q=cell_throughput_q
+        )
+        degradation_cost = deg_metrics["degradation_cost_rmb"]
+        net_profit = gross_profit - degradation_cost
+
+        return {
+            "strategy": "historical_adjusted",
+            "strategy_label": "Day-Ahead Lagged Strategy (Historical Adjusted)",
+            "solver": "Lagged_Replay",
+            "status": status_label,
+            "is_theoretical_optimum": False,
+            "is_feasible": True,
+            "gross_revenue": round(gross_revenue, 2),
+            "charging_cost": round(charging_cost, 2),
+            "gross_profit": round(gross_profit, 2),
+            "degradation_cost": round(degradation_cost, 2),
+            "net_profit": round(net_profit, 2),
+            "charge_energy_mwh": round(charge_energy_mwh, 3),
+            "discharge_energy_mwh": round(discharge_energy_mwh, 3),
+            "cell_throughput_q_mwh": round(cell_throughput_q, 3),
+            "efc": deg_metrics["efc"],
+            "efc_rated": deg_metrics["efc_rated"],
+            "efc_usable": deg_metrics["efc_usable"],
+            "p_charge_mw": p_ch.tolist(),
+            "p_discharge_mw": p_dis.tolist(),
+            "soc": soc_traj.tolist(),
+            "min_soc": round(float(np.min(soc_traj)), 4),
+            "max_soc": round(float(np.max(soc_traj)), 4),
+            "final_soc": round(float(soc_traj[-1]), 4)
+        }

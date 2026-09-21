@@ -64,12 +64,15 @@ class DashboardBuilder:
         # 3. Extract Historical Backtest Data
         bt_pf = backtest_df[backtest_df["strategy"] == "perfect_foresight"].sort_values(by="date").reset_index(drop=True)
         bt_fix = backtest_df[backtest_df["strategy"] == "fixed_peak_valley"].sort_values(by="date").reset_index(drop=True)
+        bt_hist = backtest_df[backtest_df["strategy"] == "historical_adjusted"].sort_values(by="date").reset_index(drop=True)
 
-        hist_dates = bt_pf["date"].tolist()
-        hist_pnl_pf = [round(float(v), 2) for v in bt_pf["net_profit"]]
-        hist_pnl_fix = [round(float(v), 2) for v in bt_fix["net_profit"]]
-        hist_cum_pf = [round(float(v), 2) for v in bt_pf["cumulative_pnl"]]
-        hist_cum_fix = [round(float(v), 2) for v in bt_fix["cumulative_pnl"]]
+        hist_dates = bt_pf["date"].tolist() if not bt_pf.empty else (bt_fix["date"].tolist() if not bt_fix.empty else [])
+        hist_pnl_pf = [round(float(v), 2) for v in bt_pf["net_profit"]] if not bt_pf.empty else []
+        hist_pnl_fix = [round(float(v), 2) for v in bt_fix["net_profit"]] if not bt_fix.empty else []
+        hist_pnl_hist = [round(float(v), 2) for v in bt_hist["net_profit"]] if not bt_hist.empty else []
+        hist_cum_pf = [round(float(v), 2) for v in bt_pf["cumulative_pnl"]] if not bt_pf.empty else []
+        hist_cum_fix = [round(float(v), 2) for v in bt_fix["cumulative_pnl"]] if not bt_fix.empty else []
+        hist_cum_hist = [round(float(v), 2) for v in bt_hist["cumulative_pnl"]] if not bt_hist.empty else []
 
         # Extract latest day KPI directly from backtest_df if available to guarantee zero discrepancy
         bt_latest = bt_pf[bt_pf["date"] == latest_date]
@@ -126,9 +129,28 @@ class DashboardBuilder:
                 "dates": hist_dates,
                 "daily_pnl_pf": hist_pnl_pf,
                 "daily_pnl_fixed": hist_pnl_fix,
+                "daily_pnl_hist": hist_pnl_hist,
                 "cumulative_pnl_pf": hist_cum_pf,
                 "cumulative_pnl_fixed": hist_cum_fix,
+                "cumulative_pnl_hist": hist_cum_hist,
                 "spread_trend": [round(float(v), 2) for v in metrics_df.sort_values(by="date")["peak_valley_spread"]]
+            },
+            "strategy_comparison": {
+                "pf_total_pnl": round(float(sum(hist_pnl_pf)), 2) if hist_pnl_pf else 0.0,
+                "hist_total_pnl": round(float(sum(hist_pnl_hist)), 2) if hist_pnl_hist else 0.0,
+                "fixed_total_pnl": round(float(sum(hist_pnl_fix)), 2) if hist_pnl_fix else 0.0,
+                "pf_avg_pnl": round(float(sum(hist_pnl_pf) / len(hist_pnl_pf)), 2) if hist_pnl_pf else 0.0,
+                "hist_avg_pnl": round(float(sum(hist_pnl_hist) / len(hist_pnl_hist)), 2) if hist_pnl_hist else 0.0,
+                "fixed_avg_pnl": round(float(sum(hist_pnl_fix) / len(hist_pnl_fix)), 2) if hist_pnl_fix else 0.0,
+                "hist_captured_pct": round(float(sum(hist_pnl_hist) / sum(hist_pnl_pf) * 100), 1) if (hist_pnl_pf and sum(hist_pnl_pf) > 0 and hist_pnl_hist) else 0.0,
+                "fixed_captured_pct": round(float(sum(hist_pnl_fix) / sum(hist_pnl_pf) * 100), 1) if (hist_pnl_pf and sum(hist_pnl_pf) > 0 and hist_pnl_fix) else 0.0
+            },
+            "stress_test": {
+                "description": "光伏突变转折场景：前日深V鸭子曲线（午间深谷、晚间尖峰），次日突发重阴雨（午间光伏塌陷电价暴涨至900元，晚间强风电电价暴跌至50元）",
+                "hist_pnl": -167119.04,
+                "pf_pnl": 105779.47,
+                "gap": 272898.51,
+                "loss_mechanism": "历史滞后策略机械复现前日午间满充、晚间满放指令；在900元/MWh最高电价时强行充电，在50元/MWh最低电价时放电，叠加热耗寿命衰减，单日净亏损逾16.7万元！"
             }
         }
 
@@ -149,7 +171,14 @@ class DashboardBuilder:
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>VoltPulse - 中国电力现货市场与储能运行分析平台</title>
-  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+  <script src="vendor/echarts.min.js"></script>
+  <script>
+    if (typeof echarts === 'undefined') {{
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js';
+      document.head.appendChild(s);
+    }}
+  </script>
   <style>
     :root {{
       --bg: #090d16;
@@ -345,6 +374,7 @@ class DashboardBuilder:
       <button class="tab-btn" onclick="switchTab('market')">② 现货电价 (Market)</button>
       <button class="tab-btn" onclick="switchTab('storage')">③ 储能调度 (Storage)</button>
       <button class="tab-btn" onclick="switchTab('backtest')">④ 滚动回测 (Backtest)</button>
+      <button class="tab-btn" onclick="switchTab('comparison')">⑤ 策略对比与时滞失真压力测试 (Comparison & Stress)</button>
     </div>
 
     <!-- Section 1: Overview Tab (Answering the 5 Questions) -->
@@ -438,7 +468,7 @@ class DashboardBuilder:
     <div id="tab-backtest" style="display: none;">
       <div class="chart-card">
         <div class="chart-header">
-          <span class="chart-title">策略回测累计净收益对比 (14 Days Cumulative PnL)</span>
+          <span class="chart-title">三策略回测累计净收益对比 (14 Days Cumulative PnL)</span>
         </div>
         <div id="chart-backtest-cum" class="chart-container"></div>
       </div>
@@ -447,6 +477,81 @@ class DashboardBuilder:
           <span class="chart-title">每日净收益柱状对比 (Daily PnL)</span>
         </div>
         <div id="chart-backtest-daily" class="chart-container"></div>
+      </div>
+    </div>
+
+    <!-- Section 5: Comparison & Stress Test Tab -->
+    <div id="tab-comparison" style="display: none;">
+      <!-- Three Strategy Performance Table -->
+      <div class="hero-panel">
+        <div class="meta-row">
+          <span>三策略 14 天平稳期表现横向对比 (100MW / 200MWh 机组)</span>
+          <span>严格因果时序 · 零未来信息泄露</span>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">① 事后理论最优 (MILP)</div>
+            <div class="kpi-val" style="color: var(--accent-green)" id="kpi-comp-pf">-</div>
+            <div class="kpi-sub">基准标尺 (100% 理论上限)</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">② 日前历史滞后策略</div>
+            <div class="kpi-val" style="color: var(--accent-blue)" id="kpi-comp-hist">-</div>
+            <div class="kpi-sub" id="kpi-comp-hist-sub">平稳期捕获 96% 上限</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">③ 固定时段启发式策略</div>
+            <div class="kpi-val" style="color: var(--text-muted)" id="kpi-comp-fixed">-</div>
+            <div class="kpi-sub" id="kpi-comp-fixed-sub">仅捕获约 37% 上限</div>
+          </div>
+        </div>
+
+        <!-- Research Questions Cards -->
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-top: 12px;">
+          <h4 style="color: var(--accent-amber); font-size: 0.875rem; margin-bottom: 6px;">💡 核心研究问题 1：固定时段充放电是否一直有效？</h4>
+          <p style="font-size: 0.8125rem; color: #d1d5db; line-height: 1.6;">
+            <strong>结论：否。</strong> 固定时段在传统分时电价下可提供基础避险，但在高比例光伏渗透的现代现货市场（如山东单深V“鸭子曲线”）下严重钝化。在 14 天回测中，固定策略总收益仅为 63.8 万元（理论上限为 173.8 万元），大量错失午间光伏低谷（甚至负电价时段）的廉价充电良机，捕获率不足 40%。
+          </p>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-top: 12px;">
+          <h4 style="color: var(--accent-blue); font-size: 0.875rem; margin-bottom: 6px;">💡 核心研究问题 2：利用前一天已获得的价格调整次日时段，能否改善结果？</h4>
+          <p style="font-size: 0.8125rem; color: #d1d5db; line-height: 1.6;">
+            <strong>结论：平稳期极优，转折期致命。</strong> 在日间负荷和天气特征连续自相关时，历史滞后策略自适应追踪午间低谷，14天斩获 166.9 万元净利（捕获 96% 理论上限），较固定时段大增 +161.5%；然而，一旦遇上天气或电网运行突变，纯滞后策略将出现灾难性的“时滞滞后失真”。
+          </p>
+        </div>
+      </div>
+
+      <!-- Stress Test Card -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <span class="chart-title" style="color: var(--accent-rose)">⚠️ 突发转折场景压力测试 (Regime-Shift Stress Test)</span>
+          <span class="badge" style="color: var(--accent-rose); border-color: var(--accent-rose)">晴转阴风暴测试</span>
+        </div>
+        <div style="font-size: 0.8125rem; color: #9ca3af; margin-bottom: 12px;">
+          <strong>场景设定</strong>：Day 1 为典型晴天鸭子曲线（午间光伏大发低至 -20 元，晚高峰 800 元）；Day 2 突发重阴雨且夜间风电大发（午间电价暴涨至 900 元，晚间电价暴跌至 50 元）。
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card" style="border-color: rgba(244, 63, 94, 0.4); background: rgba(244, 63, 94, 0.05);">
+            <div class="kpi-label" style="color: var(--accent-rose)">日前历史滞后策略 (Day 2)</div>
+            <div class="kpi-val" style="color: var(--accent-rose)">- ¥ 167,119</div>
+            <div class="kpi-sub" style="color: #fca5a5">单日巨额亏损 (时滞失真)</div>
+          </div>
+          <div class="kpi-card" style="border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.05);">
+            <div class="kpi-label" style="color: var(--accent-green)">事后理论最优 (Day 2)</div>
+            <div class="kpi-val" style="color: var(--accent-green)">+ ¥ 105,779</div>
+            <div class="kpi-sub" style="color: #6ee7b7">自适应调度依然盈利</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">单日策略回撤差距 (Gap)</div>
+            <div class="kpi-val" style="color: var(--accent-amber)">¥ 272,899</div>
+            <div class="kpi-sub">单日差距逾 27 万元</div>
+          </div>
+        </div>
+        <div class="notes-box" style="border-left-color: var(--accent-rose); margin-top: 8px;">
+          <strong>时滞失真机理</strong>：滞后策略盲目复现前日排程，在 Day 2 午间 900 元/MWh 最贵峰值强行充电 173 MWh（购电耗费 15.6 万元），并在晚间 50 元/MWh 最低谷放电（收入仅 7,380 元），加之 1.8 万元电芯衰减折旧，单日巨亏 16.7 万元！<br/>
+          <strong>工程启示</strong>：单纯“看昨日调今日”无法抗御天气突变风险，现货储能套利必须依托日前气象与功率预测模型。
+        </div>
       </div>
     </div>
 
@@ -476,6 +581,21 @@ class DashboardBuilder:
     document.getElementById("kpi-charge-cost").innerText = "¥ " + Number(DATA.today_kpi.bess_gross_profit * 0.3).toLocaleString('zh-CN', {{maximumFractionDigits: 0}});
     document.getElementById("kpi-deg-cost").innerText = "¥ " + Number(DATA.today_kpi.bess_degradation_cost).toLocaleString('zh-CN', {{maximumFractionDigits: 0}});
     document.getElementById("kpi-final-net").innerText = "¥ " + Number(DATA.today_kpi.bess_net_profit).toLocaleString('zh-CN', {{maximumFractionDigits: 0}});
+
+    // Comparison tab KPIs
+    if (DATA.strategy_comparison) {{
+      const sc = DATA.strategy_comparison;
+      const elPf = document.getElementById("kpi-comp-pf");
+      const elHist = document.getElementById("kpi-comp-hist");
+      const elFixed = document.getElementById("kpi-comp-fixed");
+      if (elPf) elPf.innerText = "¥ " + Number(sc.pf_total_pnl).toLocaleString('zh-CN', {{maximumFractionDigits: 0}});
+      if (elHist) elHist.innerText = "¥ " + Number(sc.hist_total_pnl).toLocaleString('zh-CN', {{maximumFractionDigits: 0}});
+      if (elFixed) elFixed.innerText = "¥ " + Number(sc.fixed_total_pnl).toLocaleString('zh-CN', {{maximumFractionDigits: 0}});
+      const subHist = document.getElementById("kpi-comp-hist-sub");
+      const subFixed = document.getElementById("kpi-comp-fixed-sub");
+      if (subHist) subHist.innerText = `捕获率: ${{sc.hist_captured_pct}}% | 日均 ¥${{Number(sc.hist_avg_pnl).toLocaleString('zh-CN', {{maximumFractionDigits:0}})}}`;
+      if (subFixed) subFixed.innerText = `捕获率: ${{sc.fixed_captured_pct}}% | 日均 ¥${{Number(sc.fixed_avg_pnl).toLocaleString('zh-CN', {{maximumFractionDigits:0}})}}`;
+    }}
 
     // 2. Render Charts
     let charts = {{}};
@@ -508,21 +628,21 @@ class DashboardBuilder:
       }});
       charts['price'] = priceChart;
 
-      // B. Storage Dispatch Chart
+      // B. Storage Optimization Chart
       const storageChart = echarts.init(document.getElementById('chart-overview-storage'));
       storageChart.setOption({{
         tooltip: {{ trigger: 'axis', backgroundColor: '#111827', textStyle: {{ color: '#f3f4f6' }}, borderColor: '#1f293d' }},
-        legend: {{ data: ['充电功率', '放电功率', 'SOC (%)'], textStyle: {{ color: '#9ca3af' }}, top: '0%' }},
-        grid: {{ left: '3%', right: '4%', bottom: '8%', top: '15%', containLabel: true }},
+        legend: {{ data: ['放电功率 (MW)', '充电功率 (MW)', 'SOC (%)'], textStyle: {{ color: '#9ca3af' }} }},
+        grid: {{ left: '3%', right: '4%', bottom: '8%', top: '12%', containLabel: true }},
         xAxis: {{ type: 'category', data: DATA.intraday.timestamps, axisLine: {{ lineStyle: {{ color: '#4b5563' }} }} }},
         yAxis: [
-          {{ type: 'value', name: '功率 (MW)', max: 100, min: 0, splitLine: {{ lineStyle: {{ color: '#1f293d' }} }} }},
-          {{ type: 'value', name: 'SOC (%)', max: 100, min: 0, position: 'right', splitLine: {{ show: false }} }}
+          {{ type: 'value', name: '功率 (MW)', splitLine: {{ lineStyle: {{ color: '#1f293d' }} }} }},
+          {{ type: 'value', name: 'SOC (%)', min: 0, max: 100, splitLine: {{ show: false }} }}
         ],
         series: [
-          {{ name: '充电功率', type: 'bar', stack: 'power', data: DATA.intraday.charge_mw, itemStyle: {{ color: '#10b981' }} }},
-          {{ name: '放电功率', type: 'bar', stack: 'power', data: DATA.intraday.discharge_mw, itemStyle: {{ color: '#f59e0b' }} }},
-          {{ name: 'SOC (%)', type: 'line', yAxisIndex: 1, smooth: true, data: DATA.intraday.soc_percent, lineStyle: {{ width: 2, color: '#a855f7' }} }}
+          {{ name: '放电功率 (MW)', type: 'bar', stack: 'p', data: DATA.intraday.discharge_mw, itemStyle: {{ color: '#10b981' }} }},
+          {{ name: '充电功率 (MW)', type: 'bar', stack: 'p', data: DATA.intraday.charge_mw.map(v => -v), itemStyle: {{ color: '#f59e0b' }} }},
+          {{ name: 'SOC (%)', type: 'line', yAxisIndex: 1, step: 'end', data: DATA.intraday.soc_percent, lineStyle: {{ width: 2, color: '#a855f7' }} }}
         ]
       }});
       charts['storage'] = storageChart;
@@ -547,39 +667,56 @@ class DashboardBuilder:
 
     function initBacktestCharts() {{
       const cumChart = echarts.init(document.getElementById('chart-backtest-cum'));
+      const cumSeries = [
+        {{ name: '事后理论最优 (MILP)', type: 'line', smooth: true, data: DATA.history.cumulative_pnl_pf, lineStyle: {{ width: 3, color: '#10b981' }} }}
+      ];
+      const cumLegend = ['事后理论最优 (MILP)'];
+      if (DATA.history.cumulative_pnl_hist && DATA.history.cumulative_pnl_hist.length > 0) {{
+        cumSeries.push({{ name: '日前历史滞后策略 (Historical Adjusted)', type: 'line', smooth: true, data: DATA.history.cumulative_pnl_hist, lineStyle: {{ width: 2.5, color: '#38bdf8' }} }});
+        cumLegend.push('日前历史滞后策略 (Historical Adjusted)');
+      }}
+      cumSeries.push({{ name: '固定时段峰谷策略 (Fixed Benchmark)', type: 'line', smooth: true, data: DATA.history.cumulative_pnl_fixed, lineStyle: {{ width: 2, color: '#6b7280', type: 'dashed' }} }});
+      cumLegend.push('固定时段峰谷策略 (Fixed Benchmark)');
+
       cumChart.setOption({{
         tooltip: {{ trigger: 'axis', backgroundColor: '#111827', textStyle: {{ color: '#f3f4f6' }}, borderColor: '#1f293d' }},
-        legend: {{ data: ['理论最优 (Perfect Foresight)', '固定峰谷策略 (Fixed Benchmark)'], textStyle: {{ color: '#9ca3af' }} }},
+        legend: {{ data: cumLegend, textStyle: {{ color: '#9ca3af' }} }},
         grid: {{ left: '3%', right: '4%', bottom: '8%', top: '15%', containLabel: true }},
         xAxis: {{ type: 'category', data: DATA.history.dates, axisLine: {{ lineStyle: {{ color: '#4b5563' }} }} }},
         yAxis: {{ type: 'value', name: '累计净收益 (RMB)', splitLine: {{ lineStyle: {{ color: '#1f293d' }} }} }},
-        series: [
-          {{ name: '理论最优 (Perfect Foresight)', type: 'line', smooth: true, data: DATA.history.cumulative_pnl_pf, lineStyle: {{ width: 3, color: '#10b981' }} }},
-          {{ name: '固定峰谷策略 (Fixed Benchmark)', type: 'line', smooth: true, data: DATA.history.cumulative_pnl_fixed, lineStyle: {{ width: 2, color: '#9ca3af', type: 'dashed' }} }}
-        ]
+        series: cumSeries
       }});
       charts['cum'] = cumChart;
 
       const dailyChart = echarts.init(document.getElementById('chart-backtest-daily'));
+      const dailySeries = [
+        {{ name: '理论最优日净利', type: 'bar', data: DATA.history.daily_pnl_pf, itemStyle: {{ color: '#10b981' }} }}
+      ];
+      const dailyLegend = ['理论最优日净利'];
+      if (DATA.history.daily_pnl_hist && DATA.history.daily_pnl_hist.length > 0) {{
+        dailySeries.push({{ name: '历史滞后日净利', type: 'bar', data: DATA.history.daily_pnl_hist, itemStyle: {{ color: '#38bdf8' }} }});
+        dailyLegend.push('历史滞后日净利');
+      }}
+      dailySeries.push({{ name: '固定策略日净利', type: 'bar', data: DATA.history.daily_pnl_fixed, itemStyle: {{ color: '#6b7280' }} }});
+      dailyLegend.push('固定策略日净利');
+
       dailyChart.setOption({{
         tooltip: {{ trigger: 'axis', backgroundColor: '#111827', textStyle: {{ color: '#f3f4f6' }}, borderColor: '#1f293d' }},
-        legend: {{ data: ['理论最优日净利', '固定策略日净利'], textStyle: {{ color: '#9ca3af' }} }},
+        legend: {{ data: dailyLegend, textStyle: {{ color: '#9ca3af' }} }},
         grid: {{ left: '3%', right: '4%', bottom: '8%', top: '15%', containLabel: true }},
         xAxis: {{ type: 'category', data: DATA.history.dates, axisLine: {{ lineStyle: {{ color: '#4b5563' }} }} }},
         yAxis: {{ type: 'value', name: '日净利 (RMB)', splitLine: {{ lineStyle: {{ color: '#1f293d' }} }} }},
-        series: [
-          {{ name: '理论最优日净利', type: 'bar', data: DATA.history.daily_pnl_pf, itemStyle: {{ color: '#38bdf8' }} }},
-          {{ name: '固定策略日净利', type: 'bar', data: DATA.history.daily_pnl_fixed, itemStyle: {{ color: '#6b7280' }} }}
-        ]
+        series: dailySeries
       }});
       charts['daily'] = dailyChart;
     }}
 
     // Tab Switcher
     function switchTab(tabId) {{
-      const tabs = ['overview', 'market', 'storage', 'backtest'];
+      const tabs = ['overview', 'market', 'storage', 'backtest', 'comparison'];
       tabs.forEach(t => {{
-        document.getElementById(`tab-${{t}}`).style.display = (t === tabId) ? 'block' : 'none';
+        const el = document.getElementById(`tab-${{t}}`);
+        if (el) el.style.display = (t === tabId) ? 'block' : 'none';
       }});
       document.querySelectorAll('.tab-btn').forEach((btn, idx) => {{
         if (tabs[idx] === tabId) btn.classList.add('active');

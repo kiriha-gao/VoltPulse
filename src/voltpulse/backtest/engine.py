@@ -6,7 +6,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from voltpulse.optimization.bess_model import BESSOptimizer
-from voltpulse.optimization.benchmark import FixedPeakValleyStrategy
+from voltpulse.optimization.benchmark import FixedPeakValleyStrategy, HistoricalAdjustedStrategy
 from voltpulse.utils.logging import get_logger
 
 logger = get_logger("voltpulse.backtest")
@@ -16,6 +16,10 @@ class BacktestEngine:
     """
     Day-by-day rolling backtest engine conforming to
     VoltPulse Specification V2.0 Section 10.4 & 10.5 (M09).
+    Supports 3 strategies:
+      1. perfect_foresight: Ex-post Theoretical Optimum (HiGHS MILP)
+      2. historical_adjusted: Day-Ahead Lagged Persistence (Yesterday's Schedule)
+      3. fixed_peak_valley: Rule-based Fixed Peak-Valley Benchmark
     """
 
     def __init__(self, storage_config: Dict[str, Any], benchmark_config: Optional[Dict[str, Any]] = None):
@@ -42,10 +46,12 @@ class BacktestEngine:
             charging_windows=fixed_cfg.get("charging_windows"),
             discharging_windows=fixed_cfg.get("discharging_windows")
         )
+        self.historical_strategy = HistoricalAdjustedStrategy(storage_config)
 
     def run_backtest(self, prices_df: pd.DataFrame, market: str,
                      price_type: Optional[str] = None,
-                     start_date: Optional[str] = None, end_date: Optional[str] = None) -> pd.DataFrame:
+                     start_date: Optional[str] = None, end_date: Optional[str] = None,
+                     strategies: Optional[List[str]] = None) -> pd.DataFrame:
         """
         Executes rolling backtest across all complete valid days in prices_df.
         Strictly segregates price_type (DA vs RT) and enforces complete 24h intervals.
@@ -93,6 +99,9 @@ class BacktestEngine:
             discharging_windows=d_windows
         )
 
+        active_strategies = set(strategies) if strategies else {"perfect_foresight", "historical_adjusted", "fixed_peak_valley"}
+        prev_day_opt = None
+
         for d in unique_dates:
             day_df = df[df["date"] == d].sort_values(by="timestamp").reset_index(drop=True)
             interval_min = int(day_df["interval"].iloc[0]) if "interval" in day_df.columns else 15
@@ -112,62 +121,106 @@ class BacktestEngine:
 
             prices = day_df["price_rmb_mwh"].values
             timestamps = day_df["timestamp"].tolist()
+            ptype = price_type or (day_df["price_type"].iloc[0] if "price_type" in day_df.columns else "day_ahead")
 
             # 1. Strategy 1: Ex-post Theoretical Optimum (HiGHS MILP)
             res_opt = self.milp_optimizer.optimize_dispatch(prices, interval_minutes=interval_min)
-            daily_records.append({
-                "market": market,
-                "date": d,
-                "price_type": price_type or (day_df["price_type"].iloc[0] if "price_type" in day_df.columns else "day_ahead"),
-                "strategy": "perfect_foresight",
-                "strategy_label": "Ex-post Theoretical Optimum (MILP)",
-                "solver": "HiGHS_MILP",
-                "is_theoretical_optimum": True,
-                "is_feasible": res_opt.get("status") == "OPTIMAL",
-                "status": res_opt.get("status", "OPTIMAL"),
-                "gross_revenue": res_opt["gross_revenue"],
-                "charging_cost": res_opt["charging_cost"],
-                "gross_profit": res_opt["gross_profit"],
-                "degradation_cost": res_opt["degradation_cost"],
-                "net_profit": res_opt["net_profit"],
-                "charge_energy_mwh": res_opt["charge_energy_mwh"],
-                "discharge_energy_mwh": res_opt["discharge_energy_mwh"],
-                "cell_throughput_q_mwh": res_opt["cell_throughput_q_mwh"],
-                "efc": res_opt["efc"],
-                "efc_rated": res_opt["efc_rated"],
-                "efc_usable": res_opt["efc_usable"],
-                "min_soc": res_opt["min_soc"],
-                "max_soc": res_opt["max_soc"],
-                "final_soc": res_opt["final_soc"]
-            })
+            if "perfect_foresight" in active_strategies:
+                daily_records.append({
+                    "market": market,
+                    "date": d,
+                    "price_type": ptype,
+                    "strategy": "perfect_foresight",
+                    "strategy_label": "Ex-post Theoretical Optimum (MILP)",
+                    "solver": "HiGHS_MILP",
+                    "is_theoretical_optimum": True,
+                    "is_feasible": res_opt.get("status") == "OPTIMAL",
+                    "status": res_opt.get("status", "OPTIMAL"),
+                    "gross_revenue": res_opt["gross_revenue"],
+                    "charging_cost": res_opt["charging_cost"],
+                    "gross_profit": res_opt["gross_profit"],
+                    "degradation_cost": res_opt["degradation_cost"],
+                    "net_profit": res_opt["net_profit"],
+                    "charge_energy_mwh": res_opt["charge_energy_mwh"],
+                    "discharge_energy_mwh": res_opt["discharge_energy_mwh"],
+                    "cell_throughput_q_mwh": res_opt["cell_throughput_q_mwh"],
+                    "efc": res_opt["efc"],
+                    "efc_rated": res_opt["efc_rated"],
+                    "efc_usable": res_opt["efc_usable"],
+                    "min_soc": res_opt["min_soc"],
+                    "max_soc": res_opt["max_soc"],
+                    "final_soc": res_opt["final_soc"]
+                })
 
-            # 2. Strategy 2: Fixed Peak-Valley Rule-based Benchmark Strategy
-            res_fixed = market_fixed_strategy.simulate(prices, timestamps, interval_minutes=interval_min)
-            daily_records.append({
-                "market": market,
-                "date": d,
-                "price_type": price_type or day_df["price_type"].iloc[0] if "price_type" in day_df.columns else "day_ahead",
-                "strategy": "fixed_peak_valley",
-                "strategy_label": "Fixed Peak-Valley Benchmark",
-                "solver": "Rule_Based",
-                "is_theoretical_optimum": False,
-                "is_feasible": res_fixed.get("is_feasible", res_fixed.get("status") == "SUCCESS"),
-                "status": res_fixed.get("status", "SUCCESS"),
-                "gross_revenue": res_fixed["gross_revenue"],
-                "charging_cost": res_fixed["charging_cost"],
-                "gross_profit": res_fixed["gross_profit"],
-                "degradation_cost": res_fixed["degradation_cost"],
-                "net_profit": res_fixed["net_profit"],
-                "charge_energy_mwh": res_fixed["charge_energy_mwh"],
-                "discharge_energy_mwh": res_fixed["discharge_energy_mwh"],
-                "cell_throughput_q_mwh": res_fixed["cell_throughput_q_mwh"],
-                "efc": res_fixed["efc"],
-                "efc_rated": res_fixed["efc_rated"],
-                "efc_usable": res_fixed["efc_usable"],
-                "min_soc": res_fixed["min_soc"],
-                "max_soc": res_fixed["max_soc"],
-                "final_soc": res_fixed["final_soc"]
-            })
+            # 2. Strategy 2: Day-Ahead Lagged Strategy (Historical Adjusted)
+            if "historical_adjusted" in active_strategies:
+                if prev_day_opt is not None:
+                    planned_ch = np.array(prev_day_opt["p_charge_mw"])
+                    planned_dis = np.array(prev_day_opt["p_discharge_mw"])
+                else:
+                    # Cold start on Day 0: use fixed heuristic schedule as baseline
+                    init_fixed = market_fixed_strategy.simulate(prices, timestamps, interval_minutes=interval_min)
+                    planned_ch = np.array(init_fixed["p_charge_mw"])
+                    planned_dis = np.array(init_fixed["p_discharge_mw"])
+
+                res_hist = self.historical_strategy.simulate(prices, planned_ch, planned_dis, interval_minutes=interval_min)
+                daily_records.append({
+                    "market": market,
+                    "date": d,
+                    "price_type": ptype,
+                    "strategy": "historical_adjusted",
+                    "strategy_label": "Day-Ahead Lagged Strategy (Historical Adjusted)",
+                    "solver": "Lagged_Replay",
+                    "is_theoretical_optimum": False,
+                    "is_feasible": res_hist.get("is_feasible", True),
+                    "status": res_hist.get("status", "SUCCESS"),
+                    "gross_revenue": res_hist["gross_revenue"],
+                    "charging_cost": res_hist["charging_cost"],
+                    "gross_profit": res_hist["gross_profit"],
+                    "degradation_cost": res_hist["degradation_cost"],
+                    "net_profit": res_hist["net_profit"],
+                    "charge_energy_mwh": res_hist["charge_energy_mwh"],
+                    "discharge_energy_mwh": res_hist["discharge_energy_mwh"],
+                    "cell_throughput_q_mwh": res_hist["cell_throughput_q_mwh"],
+                    "efc": res_hist["efc"],
+                    "efc_rated": res_hist["efc_rated"],
+                    "efc_usable": res_hist["efc_usable"],
+                    "min_soc": res_hist["min_soc"],
+                    "max_soc": res_hist["max_soc"],
+                    "final_soc": res_hist["final_soc"]
+                })
+
+            # 3. Strategy 3: Fixed Peak-Valley Rule-based Benchmark Strategy
+            if "fixed_peak_valley" in active_strategies:
+                res_fixed = market_fixed_strategy.simulate(prices, timestamps, interval_minutes=interval_min)
+                daily_records.append({
+                    "market": market,
+                    "date": d,
+                    "price_type": ptype,
+                    "strategy": "fixed_peak_valley",
+                    "strategy_label": "Fixed Peak-Valley Benchmark",
+                    "solver": "Rule_Based",
+                    "is_theoretical_optimum": False,
+                    "is_feasible": res_fixed.get("is_feasible", res_fixed.get("status") == "SUCCESS"),
+                    "status": res_fixed.get("status", "SUCCESS"),
+                    "gross_revenue": res_fixed["gross_revenue"],
+                    "charging_cost": res_fixed["charging_cost"],
+                    "gross_profit": res_fixed["gross_profit"],
+                    "degradation_cost": res_fixed["degradation_cost"],
+                    "net_profit": res_fixed["net_profit"],
+                    "charge_energy_mwh": res_fixed["charge_energy_mwh"],
+                    "discharge_energy_mwh": res_fixed["discharge_energy_mwh"],
+                    "cell_throughput_q_mwh": res_fixed["cell_throughput_q_mwh"],
+                    "efc": res_fixed["efc"],
+                    "efc_rated": res_fixed["efc_rated"],
+                    "efc_usable": res_fixed["efc_usable"],
+                    "min_soc": res_fixed["min_soc"],
+                    "max_soc": res_fixed["max_soc"],
+                    "final_soc": res_fixed["final_soc"]
+                })
+
+            # Retain Day d optimal plan as candidate prior for Day d+1
+            prev_day_opt = res_opt
 
         results_df = pd.DataFrame(daily_records)
         if results_df.empty:

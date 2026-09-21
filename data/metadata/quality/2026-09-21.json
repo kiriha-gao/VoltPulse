@@ -1,16 +1,16 @@
 {
   "market": "shandong",
   "target_date": "2026-09-21",
-  "status": "PASS",
+  "status": "FAIL",
   "checks": {
     "schema_mismatch": true,
     "market_valid": true,
-    "date_column_valid": true,
-    "date_consistent": true,
+    "date_column_valid": false,
+    "date_consistent": false,
     "timezone_valid": true,
     "interval_valid": true,
     "source_valid": true,
-    "simulation_check": true,
+    "simulation_check": false,
     "rows": 96,
     "expected_rows": 96,
     "missing": 0,
@@ -19,10 +19,14 @@
     "extreme_prices": 0,
     "extreme_price_count": 0
   },
-  "issues": [],
+  "issues": [
+    "Date column mismatch: expected '2026-09-21', found ['2026-08-01']",
+    "Date mismatch: timestamps do not belong to target_date 2026-09-21",
+    "Simulation gate rejection: is_simulated=True data rejected in production QC"
+  ],
   "rows": 96,
   "missing": 0,
   "duplicates": 0,
   "continuity": 1.0,
-  "checked_at": "2026-09-21T16:25:56.952946+08:00"
+  "checked_at": "2026-09-21T21:36:14.588280+08:00"
 }
