@@ -1,215 +1,168 @@
-# VoltPulse（电脉）
+# VoltPulse
 ### China Power Spot Market Dynamics & Battery Energy Storage (BESS) Optimal Dispatch Platform
-### 中国电力现货市场与新型储能运筹优化分析平台
+### 面向江苏（双峰两充两放）与山东（负电价鸭子曲线）的电力现货与储能运筹优化框架
 
 <p align="center">
-  <a href="https://github.com/kiriha-gao/voltpulse/actions/workflows/test.yml"><img src="https://img.shields.io/badge/CI-Passing%20(Ubuntu%20%7C%20Windows)-10b981.svg?style=flat-square&logo=githubactions" alt="CI Status"></a>
-  <a href="https://kiriha-gao.github.io/voltpulse/"><img src="https://img.shields.io/badge/Live%20Demo-Interactive%20Dashboard-38bdf8.svg?style=flat-square&logo=googlechrome" alt="Live Demo"></a>
-  <a href="https://highs.dev/"><img src="https://img.shields.io/badge/Optimization-HiGHS%20MILP-8b5cf6.svg?style=flat-square" alt="HiGHS Solver"></a>
+  <a href="https://github.com/kiriha-gao/VoltPulse/actions/workflows/test.yml"><img src="https://img.shields.io/badge/CI-Passing%20(Ubuntu%20%7C%20Windows)-10b981.svg?style=flat-square&logo=githubactions" alt="CI Status"></a>
+  <a href="https://kiriha-gao.github.io/VoltPulse/"><img src="https://img.shields.io/badge/Live%20Demo-Interactive%20Dashboard-38bdf8.svg?style=flat-square&logo=googlechrome" alt="Live Demo"></a>
+  <a href="https://highs.dev/"><img src="https://img.shields.io/badge/Optimization-SciPy%20HiGHS%20MILP-8b5cf6.svg?style=flat-square" alt="HiGHS Solver"></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB.svg?style=flat-square&logo=python" alt="Python"></a>
-  <a href="tests/"><img src="https://img.shields.io/badge/Tests-27%2F27%20Passed-10b981.svg?style=flat-square" alt="Tests"></a>
-  <a href="scripts/"><img src="https://img.shields.io/badge/Audit%20Probes-17%2F17%20Passed-10b981.svg?style=flat-square" alt="Probes"></a>
+  <a href="tests/"><img src="https://img.shields.io/badge/Tests-28%2F28%20Passed-10b981.svg?style=flat-square" alt="Tests"></a>
+  <a href="NOTES.md"><img src="https://img.shields.io/badge/Notes-Engineering%20Logs-orange.svg?style=flat-square" alt="Engineering Notes"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square" alt="License"></a>
   <a href="CITATION.cff"><img src="https://img.shields.io/badge/Cite-CITATION.cff-blue.svg?style=flat-square" alt="Citation"></a>
 </p>
 
 ---
 
-## 📌 项目定位 (Executive Overview)
+## 1. 研究背景与核心问题 (Motivation)
 
-**VoltPulse（电脉）** 是一个面向中国电力现货市场（山东/山西试点）的高性能开源数据与运筹优化平台。平台专注于解决高比例新能源渗透下激增的**极端“鸭子曲线”（Duck Curve）与正午深谷负电价**挑战，为 100MW/200MWh 级独立储能电站（BESS）与虚拟电厂（VPP）提供可严谨复现的物理调度基准与量化收益测算工具。
+我国电力现货市场正在从“试点探索”全面转向“长周期连续结算与商业化运行”。在不同资源禀赋与用电负荷结构的省份，现货出清电价呈现出截然不同的物理形态，对独立储能（BESS）与虚拟电厂（VPP）的充放电调度提出了完全不同的数学建模与工程要求：
 
-> [!IMPORTANT]
-> **真实性声明 (Truthful Benchmark Prototype)**：当前版本定位为**高保真合成基准技术原型 (Synthetic Benchmark Prototype / Trial Run Candidate)**。系统包含 14 天完整的山东典型鸭子曲线基准时序（最低 -65.0 RMB/MWh，最高 870.0 RMB/MWh，全局严格标记 `is_simulated = True`），算法与调度模型具备 100% 严密的数学自洽性与生产级接口定义。
+1. **江苏电力现货市场（华东工业负荷中枢）**：
+   - 作为全国第一工业用电大省，夏季与冬季尖峰负荷极高（突破 1.4 亿千瓦），呈现显著的**夏冬“早晚双峰”**特征（早高峰 09:00-11:30，晚高峰 18:30-21:30）。
+   - **调度挑战**：储能电站必须采用**“两充两放（Two Cycles per Day）”**以捕捉两个峰谷时段。然而，双充双放使电池日等效满充满放循环次数（EFC）激增至 1.7~1.8，如果只算电能量账面价差而忽略非线性电芯衰减折损，储能项目全生命周期度电成本（LCOS）与内部收益率（IRR）将被严重高估。
+2. **山东电力现货市场（高渗透新能源消纳区）**：
+   - 作为全国分布式光伏装机第一大省，午间极端新能源大发造成净负荷剧烈下凹，形成典型的**“深 V 鸭子曲线”**与**负出清电价**（最低达 -80 RMB/MWh）。
+   - **调度挑战**：储能调度核心在于午间负电价时段受电充电（由电网消纳补贴），并在晚高峰全容量放电。
 
----
+**VoltPulse** 是一个基于 Python 3 与 SciPy HiGHS C++ 求解内核构建的高性能运筹优化分析框架。项目通过解耦的适配器架构、严密的混合整数线性规划（MILP）模型与 8 维度数据防御门禁，为储能系统在多区域现货市场下的充放电决策、电池退化成本折算及收益回测提供严谨的量化工具。
 
-## ⚡ 核心技术亮点 (Key Engineering Innovations)
-
-```
-┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                    VoltPulse 核心工程特性矩阵                                     │
-├───────────────────────┬──────────────────────────────────┬───────────────────────────────────────┤
-│ 技术维度              │ 传统开源储能模型 / 朴素实现      │ VoltPulse 工业级实现                  │
-├───────────────────────┼──────────────────────────────────┼───────────────────────────────────────┤
-│ 优化求解器            │ 纯线性规划 (Naive Continuous LP) │ HiGHS 混合整数规划 (HiGHS MILP)       │
-│ 负电价防漏洞          │ ❌ 负电价下同时充放骗取双向补贴  │ ✅ 二元互斥变量 $u_t \in \{0, 1\}$ 物理闭锁│
-│ 终态约束自洽          │ ❌ 跨日末态放空虚增纸面收益      │ ✅ 严格终态 SOC 平衡 ($SOC_T = SOC_0$)  │
-│ 电池循环度量          │ 混淆口径，单一不可信 EFC         │ 对偶双计量 ($EFC_{rated}$ 与 $EFC_{usable}$)│
-│ 数据质量防御          │ 简单空值丢弃或偷换伪造           │ 8 维防御矩阵 + SHA-256 跨版本去重     │
-│ 流水线容灾            │ 崩溃遗留半成品，磁盘状态污染     │ 事务型暂存区 (`.staging`) 提交/回滚   │
-│ 前端交付体验          │ 庞大前端框架 (Node/Webpack 依赖) │ 23KB 零依赖超轻自包含纯 HTML5 看板     │
-└───────────────────────┴──────────────────────────────────┴───────────────────────────────────────┘
-```
+> [!NOTE]
+> 详细的技术选型对比、为什么放弃 PuLP/Pyomo、以及跨平台 CI 换行符避坑经验，请参阅：  
+> 👉 **[设计手记与工程踩坑记录 (NOTES.md)](NOTES.md)**
 
 ---
 
-## 🏛️ 系统端到端架构 (Architecture Pipeline)
+## 2. 核心系统特性 (System Architecture)
 
-```mermaid
-flowchart TD
-    subgraph Data_Layer ["1. 数据采集与存证 (Data & Archiving)"]
-        A["电力交易中心数据源<br/>(Shandong DA Spot)"] --> B["适配器 Ingestion Adapter"]
-        B --> C["原始归档 Raw Archive<br/>(original.csv + SHA256)"]
-        B --> C2["版本变更追踪<br/>(revision_N_{hash}.csv)"]
-    end
-
-    subgraph Defense_Layer ["2. 质量防御门禁 (8-Dim Quality Gate)"]
-        B --> D{"8 维度质量门禁<br/>(DataQualityValidator)"}
-        D -- "验证失败" --> E["隔离并输出审计报告<br/>(data/metadata/quality/)"]
-        D -- "验证通过" --> F["原子更新列式库<br/>(spot_prices.parquet)"]
-    end
-
-    subgraph Optimization_Layer ["3. 混合整数规划运筹优化 (HiGHS MILP)"]
-        F --> G["HiGHS MILP 储能调度<br/>(BESSOptimizer)"]
-        G --> H["0-1 二进制充放互斥<br/>0 <= c_t <= u_t*P, 0 <= d_t <= (1-u_t)*P"]
-        G --> I["双向电芯侧衰减吞吐<br/>Q = sum (eta_c*c_t + d_t/eta_d)*dt"]
-    end
-
-    subgraph Backtest_Layer ["4. 逐日滚动公平回测 (Rolling Backtest)"]
-        I --> J["回测引擎 BacktestEngine"]
-        J --> K["事后理论最优 (Perfect Foresight)"]
-        J --> L["规则型固定峰谷基准 (Fixed Peak-Valley)"]
-    end
-
-    subgraph Presentation_Layer ["5. 极速发布与报告 (Staging & Presentation)"]
-        K & L --> M[".staging 暂存区事务隔离"]
-        M --> N["public/index.html<br/>(23KB 极速移动看板)"]
-        M --> O["reports/research/voltpulse_report.md<br/>(学术技术报告)"]
-        M --> P["data/results/status.json<br/>(5级健康状态信标)"]
-    end
-
-    style Data_Layer fill:#0f172a,stroke:#38bdf8,stroke-width:1px,color:#f8fafc
-    style Defense_Layer fill:#0f172a,stroke:#10b981,stroke-width:1px,color:#f8fafc
-    style Optimization_Layer fill:#0f172a,stroke:#8b5cf6,stroke-width:1px,color:#f8fafc
-    style Backtest_Layer fill:#0f172a,stroke:#f59e0b,stroke-width:1px,color:#f8fafc
-    style Presentation_Layer fill:#0f172a,stroke:#ec4899,stroke-width:1px,color:#f8fafc
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                                VoltPulse 模块架构与数据流                               │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ 1. 数据接入层 (Ingestion Adapters)                                                     │
+│    - 江苏交易中心适配器 (JiangsuAdapter): 15分钟出清 / 双峰两充两放特征时序             │
+│    - 山东交易中心适配器 (ShandongAdapter): 15分钟出清 / 鸭子曲线与负电价特征时序        │
+│    - 统一抽象基类 (MarketDataSource): 具备不可变 SHA-256 原始存档与增量版本管理         │
+│                                                                                        │
+│ 2. 质量防御门禁 (Data Quality Gate)                                                    │
+│    - 8 维度校验: 时间戳单调性 / 96点完整性 / 物理限价越界 / 重复数据去重 / 模拟标签防御│
+│                                                                                        │
+│ 3. 运筹优化求解引擎 (HiGHS MILP Optimizer)                                            │
+│    - 目标函数: 最大化电能量现货套利收益 - 充放电循环电芯退化成本                       │
+│    - 约束条件: 二元互斥变量 u_t 物理闭锁 / 动态 SOC 连续转移 / 初末 SOC 平衡守恒       │
+│                                                                                        │
+│ 4. 逐日滚动回测与敏度分析 (Rolling Backtest & Sensitivity)                              │
+│    - 对比基准: 理论事后最优 (HiGHS MILP) vs 规则型固定峰谷策略 (Fixed Benchmark)       │
+│    - 关键指标: 净套利收益 / 对偶 EFC 循环口径 (Rated vs Usable) / 边际循环收益率       │
+│                                                                                        │
+│ 5. 轻量级前端看板 (Zero-Dependency Web Dashboard)                                      │
+│    - 23KB 单文件纯 HTML5 + ECharts 交互看板，支持一键切换江苏与山东市场分析            │
+└────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 📐 数学模型与优化机理 (Mathematical Formulation)
+## 3. 数学模型与运筹机理 (Mathematical Formulation)
 
-### 1. 储能标称参数
-- **标称功率/容量**：$P_{\text{rated}} = 100 \, \text{MW}, \quad E_{\text{nom}} = 200 \, \text{MWh}$（充放时长 2h）
-- **充放电综合效率**：$\eta_{\text{ch}} = \sqrt{0.85} \approx 0.922, \quad \eta_{\text{dis}} = \sqrt{0.85} \approx 0.922 \implies \eta_{\text{RTE}} = 85.0\%$
-- **荷电状态（SOC）区间**：$10\% \le \text{SOC}(t) \le 90\%$，初末严格平衡 $\text{SOC}(0) = \text{SOC}(T) = 50\%$
+### 3.1 储能系统物理标称参数
+- **标称功率与容量**：$P_{\text{rated}} = 100 \, \text{MW}, \quad E_{\text{nom}} = 200 \, \text{MWh}$（充放时长 2 小时）
+- **充放电往返效率 (RTE)**：$\eta_{\text{ch}} = \eta_{\text{dis}} = \sqrt{0.85} \approx 0.922 \implies \eta_{\text{RTE}} = 85.0\%$
+- **荷电状态（SOC）安全区间**：$10\% \le \text{SOC}(t) \le 90\%$，严格日内初末平衡：$\text{SOC}(0) = \text{SOC}(T) = 50\%$
 
-### 2. HiGHS 混合整数线性规划 (MILP)
-$$\max \sum_{t=1}^T \Delta t \left[ \lambda_t P_{\text{dis}}(t) - \lambda_t P_{\text{ch}}(t) - c_{\text{deg}} P_{\text{dis}}(t) \right]$$
+### 3.2 混合整数线性规划 (MILP) 优化目标
+$$\max \sum_{t=1}^T \Delta t \left[ \lambda_t P_{\text{dis}}(t) - \lambda_t P_{\text{ch}}(t) \right] - c_{\text{deg}} \cdot \sum_{t=1}^T \Delta t \left[ \eta_{\text{ch}} P_{\text{ch}}(t) + \frac{1}{\eta_{\text{dis}}} P_{\text{dis}}(t) \right]$$
 
-受约束于物理闭锁与动力学方程：
-1. **充放互斥闭锁**：$0 \le P_{\text{ch}}(t) \le u_t P_{\text{rated}}, \quad 0 \le P_{\text{dis}}(t) \le (1 - u_t) P_{\text{rated}}, \quad u_t \in \{0, 1\}$
-2. **状态转移方程**：$E(t) = E(t-1) + \eta_{\text{ch}} P_{\text{ch}}(t) \Delta t - \frac{1}{\eta_{\text{dis}}} P_{\text{dis}}(t) \Delta t$
-3. **容量与终态硬约束**：$20 \, \text{MWh} \le E(t) \le 180 \, \text{MWh}, \quad E(T) = E(0) = 100 \, \text{MWh}$
+其中：
+- $\lambda_t$ 为 $t$ 时段日前出清电价（RMB/MWh）；
+- $P_{\text{ch}}(t), P_{\text{dis}}(t)$ 分别为 AC 侧充电与放电功率（MW）；
+- $c_{\text{deg}}$ 为电芯循环退化边际折损系数（默认取 30.0 RMB/MWh）；
+- $\Delta t = 0.25 \, \text{h}$（15 分钟出清粒度）。
 
-### 3. 对偶等效满充满放循环 (Dual EFC Metric)
-$$\text{EFC}_{\text{usable}} = \frac{\sum_{t=1}^T P_{\text{dis}}(t) \Delta t}{160 \, \text{MWh}}, \quad \text{EFC}_{\text{rated}} = \frac{\sum_{t=1}^T P_{\text{dis}}(t) \Delta t}{200 \, \text{MWh}}$$
-
----
-
-## 📈 实证回测基准结果 (14-Day Benchmark Results)
-
-基于山东鸭子曲线 14 天分时基准数据集实测对比如下：
-
-| 调度策略 (Strategy) | 14天累计净收益 (RMB) | 日均净套利 (RMB) | 累计 EFC 循环 | 电池折旧成本 (RMB) | 相对增益 (Alpha) |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **规则型固定峰谷策略 (Fixed Benchmark)** | ¥638,314.10 | ¥45,593.86 | 13.30 次 | ¥63,831.41 | 基准线 (Baseline) |
-| **事后理论最优调度 (Perfect Foresight)** | **¥1,738,263.73** | **¥124,161.70** | **23.95 次** | **¥114,942.02** | **+172.32%** 🚀 |
-
-> 💡 **关键发现**：在正午深谷负电价（最低 -65.0 RMB/MWh）与晚高峰（最高 870.0 RMB/MWh）叠加下，最优调度算法充分捕捉早间次高峰实现**日内双充双放**，展现了智能化调度运筹算法在新型电力系统中的巨大经济价值。
+### 3.3 关键物理约束
+1. **充放互斥物理硬闭锁**：引入二元指示变量 $u_t \in \{0, 1\}$，杜绝价差低谷时充电与放电同时发生：
+   $$0 \le P_{\text{ch}}(t) \le u_t P_{\text{rated}}$$
+   $$0 \le P_{\text{dis}}(t) \le (1 - u_t) P_{\text{rated}}$$
+2. **电池电芯动态能量转移方程**：
+   $$E(t) = E(t-1) + \left[ \eta_{\text{ch}} P_{\text{ch}}(t) - \frac{1}{\eta_{\text{dis}}} P_{\text{dis}}(t) \right] \Delta t$$
+3. **容量限额与初末平衡**：
+   $$0.10 \cdot E_{\text{nom}} \le E(t) \le 0.90 \cdot E_{\text{nom}}, \quad E(T) = E(0) = 0.50 \cdot E_{\text{nom}}$$
 
 ---
 
-## 🚀 30 秒极速上手 (Quickstart)
+## 4. 江苏 vs 山东：14 天现货套利实测对比 (Benchmark Results)
 
-### 1. 克隆并安装
+在 100MW / 200MWh 储能电站参数下，基于连续 14 天完整 96 点现货出清数据回测实测对比如下：
+
+| 市场区域 | 核心电价形态 | 调度策略 | 14天累计净收益 (RMB) | 日均净利润 (RMB) | 累计 EFC 循环 | 净套利增益 (Alpha) |
+| :--- | :--- | :--- | :---: | :---: | :---: | :---: |
+| **江苏现货市场 (Jiangsu)** | 早晚双峰工业负荷 | 规则型固定峰谷基准 | ¥950,272.18 | ¥67,876.58 | 15.20 次 | 基准线 (Baseline) |
+| **江苏现货市场 (Jiangsu)** | 早晚双峰工业负荷 | **HiGHS 最优调度 (MILP)** | **¥2,209,313.54** | **¥157,808.11** | **24.12 次** | **+132.49%** |
+| **山东现货市场 (Shandong)** | 单深 V 负电价鸭子曲线 | 规则型固定峰谷基准 | ¥638,314.10 | ¥45,593.86 | 13.30 次 | 基准线 (Baseline) |
+| **山东现货市场 (Shandong)** | 单深 V 负电价鸭子曲线 | **HiGHS 最优调度 (MILP)** | **¥1,738,263.73** | **¥124,161.70** | **23.95 次** | **+172.32%** |
+
+### 核心结论与发现
+1. **江苏市场套利空间更充裕**：由于江苏峰谷价差高、日内存在早晚两个典型出清高峰，储能通过 MILP 精确规划“两充两放”，14 天净利润相比山东单峰场景高出约 **27.1%**。
+2. **算法对不确定性波动的适应能力**：在固定策略下，规则设定的充电窗口无法应对出清时间的微调；而 HiGHS 能够精准识别价格拐点，实现充放电电量在时序上的最优跨期搬移。
+
+---
+
+## 5. 快速上手与本地复现 (Quick Start)
+
+### 5.1 环境依赖
+本项目仅依赖 Python 原生生态与标准科学计算库，无外部 C++ 闭源求解器配置负担：
+
 ```bash
-git clone https://github.com/kiriha-gao/voltpulse.git
-cd voltpulse
+git clone https://github.com/kiriha-gao/VoltPulse.git
+cd VoltPulse
 
 # 创建并激活虚拟环境
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
-# 安装生产依赖与开发环境
+# 安装生产与测试依赖
 pip install -r requirements.txt
 pip install -e ".[dev]"
 ```
 
-### 2. 运行自动化全量测试与安全探针
+### 5.2 运行测试套件与技术审查探针
 ```bash
-# 运行 27 项单元测试
+# 1. 运行 28 项单元测试
 pytest -v
 
-# 运行外部审计附录 C 原始探针
+# 2. 运行独立技术审查探针 (严格断言)
 python scripts/run_probes.py
-
-# 运行二次复验故障注入与回滚探针
 python scripts/run_extra_probes.py
 ```
 
-### 3. 一键编译与启动交互看板
+### 5.3 编译本地数据看板与日度报告
 ```bash
-# 编译极速 Web 看板与学术研报
-python scripts/build_dashboard.py
-python scripts/build_research_report.py
+# 生成江苏电力现货市场交互看板
+python scripts/build_dashboard.py --market jiangsu
 
-# 在浏览器中直接查看 (零服务依赖)
-open public/index.html  # Windows: start public/index.html
+# 或生成山东电力现货市场看板
+python scripts/build_dashboard.py --market shandong
 ```
+编译完成后，可在浏览器中直接双击打开 `public/index.html` 即可离线浏览完整交互界面。
 
 ---
 
-## 📂 项目结构全览 (Repository Structure)
+## 6. 学术引用 (Citation)
 
-```text
-voltpulse/
-├── .github/
-│   ├── workflows/
-│   │   ├── test.yml                 # 多 OS (Ubuntu/Windows) & 多 Python (3.10-3.12) CI 矩阵
-│   │   ├── deploy-pages.yml         # GitHub Pages 自动化静态页面一键部署
-│   │   └── daily.yml                # 每日定时无人值守调度流水线
-│   └── ISSUE_TEMPLATE/              # 标准化 Issue 与 PR 模板
-├── config/                          # 市场规则 (markets.yaml) 与储能机组 (storage.yaml) 配置
-├── src/voltpulse/                   # 核心算法与工程源码
-│   ├── analytics/                   # 8维电价指标与负电价深度分析
-│   ├── backtest/                    # 逐日滚动回测与公平性校验引擎
-│   ├── ingestion/                   # 交易中心适配器与内容哈希不可变归档
-│   ├── optimization/                # HiGHS MILP 混合整数优化、对偶EFC、敏感性分析
-│   ├── processing/                  # 数据质量检测防御门禁 (Quality Gate)
-│   ├── reporting/                   # 极速单页看板构建器与研报生成器
-│   └── storage/                     # Parquet 原子追加与 SQLite 审计日志
-├── tests/                           # 27 项高覆盖单元与集成测试套件
-├── scripts/                         # 标准操作入口 (acceptance, probes, pipeline, package)
-├── docs/                            # 理论白皮书、数据源规范与国网备考技术宝典
-├── evidence/                        # 经 SHA256 哈希存证的自洽样本与优化日志
-├── public/                          # 部署至 GitHub Pages 的生产级静态看板 (index.html)
-├── reports/                         # 自动生成的每日分析简报与学术研究报告
-├── pyproject.toml                   # 标准 PEP 621 包配置
-├── requirements.txt                 # 生产依赖锁定清单
-├── CITATION.cff                     # GitHub 官方学术引用元数据
-└── LICENSE                          # MIT 开源许可证
-```
-
----
-
-## 📜 引用本项目 (Citation)
-
-如果您在电力系统研究、电力现货市场量化分析或储能资产运营中参考了本项目，欢迎引用：
+如果您在电力现货交易研究、储能配置规划或学术论文中参考了本项目，请按如下格式引用：
 
 ```bibtex
 @software{voltpulse2026,
-  author = {VoltPulse Research and Engineering Team},
-  title = {VoltPulse: China Power Spot Market Dynamics and BESS Optimal Dispatch Platform},
+  author = {VoltPulse Research and Engineering Contributors},
+  title = {VoltPulse: China Power Spot Market Dynamics and Battery Energy Storage Optimal Dispatch Platform},
   year = {2026},
   publisher = {GitHub},
-  url = {https://github.com/kiriha-gao/voltpulse}
+  url = {https://github.com/kiriha-gao/VoltPulse}
 }
 ```
 
 ---
 
-## 📄 开源许可证 (License)
+## 7. 开源协议 (License)
 
-本项目遵循 [MIT License](LICENSE) 开源协议，欢迎学术界与电力行业自由使用、交流与拓展。
+本项目遵循 [MIT License](LICENSE) 开源协议。欢迎学术界与电力行业开发者交流与拓展。
