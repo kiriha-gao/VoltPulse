@@ -1,0 +1,5 @@
+# Set default behavior to automatically normalize line endings
+* text=auto
+
+# Keep exact binary bytes for evidence to guarantee byte-level SHA256 integrity across OS platforms
+evidence/* -text
