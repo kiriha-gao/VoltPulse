@@ -21,7 +21,7 @@ def generate_research_report(market: str = "shandong"):
     parquet_prices = config.get_path("spot_prices_parquet")
     daily_metrics_file = results_dir / "daily_metrics.parquet"
     backtest_file = results_dir / "backtest_results.parquet"
-    output_report_file = project_root / "reports" / "research" / "voltpulse_report.md"
+    output_report_file = project_root / "reports" / "research" / f"voltpulse_{market}_report.md"
     output_report_file.parent.mkdir(parents=True, exist_ok=True)
 
     # 1. Ensure 14 benchmark days data is loaded
@@ -32,18 +32,31 @@ def generate_research_report(market: str = "shandong"):
             prices_df = pd.read_parquet(parquet_prices)
             metrics_df = pd.read_parquet(daily_metrics_file)
             backtest_df = pd.read_parquet(backtest_file)
-            if len(prices_df) < 1344:
+            if "market" in prices_df.columns:
+                prices_df = prices_df[prices_df["market"] == market]
+            if "market" in metrics_df.columns:
+                metrics_df = metrics_df[metrics_df["market"] == market]
+            if "market" in backtest_df.columns:
+                backtest_df = backtest_df[backtest_df["market"] == market]
+            if prices_df.empty or metrics_df.empty or backtest_df.empty:
                 prices_df = None
         except Exception:
             prices_df = None
 
     if prices_df is None:
-        logger.info("Using 14-day benchmark dataset from tests/fixtures/shandong_sample.csv...")
-        fixture_path = project_root / "tests" / "fixtures" / "shandong_sample.csv"
+        fixture_filename = f"{market}_sample.csv"
+        fixture_path = project_root / "tests" / "fixtures" / fixture_filename
+        if not fixture_path.exists():
+            fixture_path = project_root / "tests" / "fixtures" / "shandong_sample.csv"
+        logger.info(f"Production dataset not available for market={market}; using isolated benchmark fixture from {fixture_path.name}...")
         prices_df = pd.read_csv(fixture_path)
+        if "market" in prices_df.columns:
+            prices_df = prices_df[prices_df["market"] == market]
         from voltpulse.analytics.price_metrics import PriceMetricsCalculator
         from voltpulse.backtest.engine import BacktestEngine
-        metrics_df = PriceMetricsCalculator.compute_and_save_all(prices_df, daily_metrics_file)
+        demo_dir = project_root / "data" / "sandbox" / "results"
+        demo_metrics_file = demo_dir / f"demo_metrics_research_{market}.parquet"
+        metrics_df = PriceMetricsCalculator.compute_and_save_all(prices_df, demo_metrics_file)
         storage_cfg = config.get_storage_config()
         benchmark_cfg = config.get_benchmark_config()
         engine = BacktestEngine(storage_config=storage_cfg, benchmark_config=benchmark_cfg)
@@ -243,9 +256,18 @@ def generate_research_report(market: str = "shandong"):
     with open(output_report_file, "w", encoding="utf-8") as f:
         f.write(report_content)
 
+    if market == "shandong":
+        default_report = project_root / "reports" / "research" / "voltpulse_report.md"
+        with open(default_report, "w", encoding="utf-8") as f:
+            f.write(report_content)
+
     logger.info(f"Research technical report successfully generated at {output_report_file}")
     return output_report_file
 
 
 if __name__ == "__main__":
-    generate_research_report()
+    import argparse
+    parser = argparse.ArgumentParser(description="VoltPulse Academic Research Report Generator")
+    parser.add_argument("--market", default="shandong", help="Target market (default: shandong)")
+    args = parser.parse_args()
+    generate_research_report(market=args.market)
