@@ -1,0 +1,95 @@
+{
+  "efficiency": [
+    {
+      "factor_value": "85%",
+      "efficiency": 0.85,
+      "net_profit": 136312.65,
+      "gross_revenue": 193403.76,
+      "charging_cost": 37891.11,
+      "cell_throughput_q_mwh": 640.0,
+      "efc_rated": 1.6
+    },
+    {
+      "factor_value": "88%",
+      "efficiency": 0.88,
+      "net_profit": 140248.95,
+      "gross_revenue": 196597.21,
+      "charging_cost": 37148.26,
+      "cell_throughput_q_mwh": 640.0,
+      "efc_rated": 1.6
+    },
+    {
+      "factor_value": "90%",
+      "efficiency": 0.9,
+      "net_profit": 142822.22,
+      "gross_revenue": 198696.03,
+      "charging_cost": 36673.8,
+      "cell_throughput_q_mwh": 640.0,
+      "efc_rated": 1.6
+    }
+  ],
+  "duration": [
+    {
+      "factor_value": "1h (100MWh)",
+      "duration_hours": 1.0,
+      "energy_mwh": 100.0,
+      "net_profit": 71748.02,
+      "gross_revenue": 98939.2,
+      "charging_cost": 17591.18,
+      "cell_throughput_q_mwh": 320.0,
+      "efc_rated": 1.6
+    },
+    {
+      "factor_value": "2h (200MWh)",
+      "duration_hours": 2.0,
+      "energy_mwh": 200.0,
+      "net_profit": 136312.65,
+      "gross_revenue": 193403.76,
+      "charging_cost": 37891.11,
+      "cell_throughput_q_mwh": 640.0,
+      "efc_rated": 1.6
+    },
+    {
+      "factor_value": "4h (400MWh)",
+      "duration_hours": 4.0,
+      "energy_mwh": 400.0,
+      "net_profit": 233094.11,
+      "gross_revenue": 335087.8,
+      "charging_cost": 68150.88,
+      "cell_throughput_q_mwh": 1128.094,
+      "efc_rated": 1.41
+    }
+  ],
+  "degradation_cost": [
+    {
+      "factor_value": "0 RMB/MWh",
+      "deg_cost_rmb": 0.0,
+      "net_profit": 155512.65,
+      "gross_revenue": 193403.76,
+      "charging_cost": 37891.11,
+      "degradation_cost": 0.0,
+      "cell_throughput_q_mwh": 640.0,
+      "efc_rated": 1.6
+    },
+    {
+      "factor_value": "30 RMB/MWh",
+      "deg_cost_rmb": 30.0,
+      "net_profit": 136312.65,
+      "gross_revenue": 193403.76,
+      "charging_cost": 37891.11,
+      "degradation_cost": 19200.0,
+      "cell_throughput_q_mwh": 640.0,
+      "efc_rated": 1.6
+    },
+    {
+      "factor_value": "60 RMB/MWh",
+      "deg_cost_rmb": 60.0,
+      "net_profit": 117112.65,
+      "gross_revenue": 193403.76,
+      "charging_cost": 37891.11,
+      "degradation_cost": 38400.0,
+      "cell_throughput_q_mwh": 640.0,
+      "efc_rated": 1.6
+    }
+  ]
+}

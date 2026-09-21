@@ -1,0 +1,22 @@
+name: 💡 Feature Request / Model Enhancement
+description: Suggest an idea, algorithm enhancement, or new market support
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Suggesting new market rules (e.g. Shanxi/Guangdong), BESS degradation models, or optimization features.
+  - type: textarea
+    id: feature
+    attributes:
+      label: Feature Description
+      description: Describe the feature you would like to see added.
+    validations:
+      required: true
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Market Mechanics & Technical Rationale
+      description: Explain the engineering or economic reasoning behind this request.
+    validations:
+      required: true

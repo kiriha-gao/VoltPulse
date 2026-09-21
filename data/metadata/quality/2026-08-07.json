@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "market": "shandong",
+  "target_date": "2026-08-07",
+  "checked_at": "2026-09-21T15:32:15.327815+08:00",
+  "rows": 96,
+  "missing": 0,
+  "duplicates": 0,
+  "continuity": 1.0,
+  "checks": {
+    "schema_mismatch": true,
+    "rows": 96,
+    "expected_rows": 96,
+    "missing": 0,
+    "duplicates": 0,
+    "continuity": 1.0,
+    "invalid_prices": 0,
+    "extreme_prices": 0,
+    "timezone_valid": true
+  },
+  "issues": []
+}

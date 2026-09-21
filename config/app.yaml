@@ -1,0 +1,30 @@
+# Application & Pipeline Configuration
+
+app:
+  name: "VoltPulse"
+  version: "1.0.0"
+  schema_version: "1.0.0"
+  environment: "production"
+
+logging:
+  level: "INFO"
+  log_dir: "logs"
+  filename: "voltpulse.log"
+  format: "%(asctime)s [%(levelname)s] [%(name)s] %(message)s"
+
+paths:
+  data_dir: "data"
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  results_dir: "data/results"
+  metadata_dir: "data/metadata"
+  quality_dir: "data/metadata/quality"
+  fixtures_dir: "tests/fixtures"
+  spot_prices_parquet: "data/processed/spot_prices.parquet"
+  database_sqlite: "data/processed/voltpulse.db"
+  status_file: "data/results/status.json"
+
+quality:
+  strict_mode: true
+  max_missing_ratio: 0.0
+  allow_duplicates: false

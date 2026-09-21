@@ -1,0 +1,35 @@
+# Market Configurations
+primary_market: shandong
+
+markets:
+  shandong:
+    name: "shandong"
+    display_name: "山东电力现货市场"
+    timezone: "Asia/Shanghai"
+    interval_minutes: 15
+    periods_per_day: 96
+    currency: "RMB"
+    price_unit: "RMB/MWh"
+    price_limits:
+      min: -80.0
+      max: 1300.0
+    data_source:
+      provider: "山东电力交易中心"
+      url: "https://pmos.sd.sgcc.com.cn/"
+      type: "day_ahead"
+  
+  shanxi:
+    name: "shanxi"
+    display_name: "山西电力现货市场"
+    timezone: "Asia/Shanghai"
+    interval_minutes: 15
+    periods_per_day: 96
+    currency: "RMB"
+    price_unit: "RMB/MWh"
+    price_limits:
+      min: 0.0
+      max: 1500.0
+    data_source:
+      provider: "山西电力交易中心"
+      url: "https://pmos.sx.sgcc.com.cn/"
+      type: "day_ahead"

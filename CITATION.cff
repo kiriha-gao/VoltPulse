@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software or benchmark dataset in your research or project, please cite it as below."
+title: "VoltPulse: China Power Spot Market Dynamics & BESS Optimal Dispatch Analytics Platform"
+abstract: "A high-performance, modular analytics and optimization platform for China electricity spot markets (Shandong/Shanxi), featuring HiGHS MILP battery energy storage arbitrage, duck curve negative price mitigation, and an 8-dimensional automated data quality gate."
+version: "2.0.0"
+date-released: "2026-09-21"
+license: "MIT"
+repository-code: "https://github.com/kiriha-gao/voltpulse"
+keywords:
+  - electricity spot market
+  - battery energy storage system
+  - BESS
+  - mixed-integer linear programming
+  - HiGHS
+  - negative electricity prices
+  - duck curve
+  - power market arbitrage
+  - China energy transition
+authors:
+  - name: "VoltPulse Research & Engineering Team"

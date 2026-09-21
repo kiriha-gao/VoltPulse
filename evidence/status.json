@@ -1,0 +1,23 @@
+{
+  "status": "healthy",
+  "pipeline": "healthy",
+  "last_attempt": "2026-09-21T15:19:50.570944+08:00",
+  "last_success": "2026-09-21T15:19:50.570944+08:00",
+  "latest_market_date": "2026-08-14",
+  "last_data_change": "2026-09-21T15:19:50.570944+08:00",
+  "expected_next_check": "2026-09-22T17:00:00+08:00",
+  "error_category": null,
+  "market": "shandong",
+  "data_quality": 1.0,
+  "days_tracked": 14,
+  "total_records": 1344,
+  "optimization_engine": {
+    "solver": "HiGHS_MILP",
+    "integrality": "Binary charge/discharge mutual exclusion u_t in {0, 1}",
+    "throughput_formula": "Q = sum_t (eta_c * c_t + d_t / eta_d) * dt",
+    "latest_date_net_profit_rmb": 136323.8,
+    "cumulative_net_profit_rmb": 1738263.73,
+    "bess_rating": "100MW_200MWh"
+  },
+  "schema_version": "2.0.0"
+}

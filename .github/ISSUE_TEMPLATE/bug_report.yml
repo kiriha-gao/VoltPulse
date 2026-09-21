@@ -1,0 +1,40 @@
+name: 🐛 Bug Report
+description: Create a report to help us improve VoltPulse
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue! Please check existing issues first.
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this behavior?
+      placeholder: |
+        1. Run `python scripts/pipeline.py --mode live`
+        2. Inspect output
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Python version, OS, SciPy version.
+      placeholder: Python 3.11, Windows 11 / Ubuntu 22.04, scipy 1.15.2
+    validations:
+      required: true

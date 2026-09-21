@@ -1,0 +1,10 @@
+{
+  "status": "failed",
+  "pipeline": "failed",
+  "last_attempt": "2026-09-21T16:25:56.930704+08:00",
+  "last_success": "prior-success",
+  "expected_next_check": "2026-09-22T17:00:00+08:00",
+  "error_category": "RuntimeError",
+  "market": "shandong",
+  "schema_version": "2.0.0"
+}

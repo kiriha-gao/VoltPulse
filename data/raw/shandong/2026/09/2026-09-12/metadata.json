@@ -1,0 +1,22 @@
+{
+  "market": "shandong",
+  "date": "2026-09-12",
+  "source": "山东电力交易中心公开披露",
+  "source_url": "https://pmos.sd.sgcc.com.cn/public/spot_price?date=2026-09-12",
+  "status": "SUCCESS",
+  "latest_sha256": "dd4996e4b458fe9c2bb8683aa44ee23e6ee950468d7e03935acca6c799dd1ce4",
+  "sha256": "dd4996e4b458fe9c2bb8683aa44ee23e6ee950468d7e03935acca6c799dd1ce4",
+  "latest_file": "original.csv",
+  "file_name": "original.csv",
+  "retrieved_at": "2026-09-21T16:25:43.324165+08:00",
+  "revisions": [
+    {
+      "revision_id": 0,
+      "file_name": "original.csv",
+      "sha256": "dd4996e4b458fe9c2bb8683aa44ee23e6ee950468d7e03935acca6c799dd1ce4",
+      "size_bytes": 6501,
+      "retrieved_at": "2026-09-21T16:23:59.195152+08:00",
+      "status": "SUCCESS"
+    }
+  ]
+}

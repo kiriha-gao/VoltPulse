@@ -1,0 +1,28 @@
+{
+  "market": "shandong",
+  "target_date": "2026-09-21",
+  "status": "PASS",
+  "checks": {
+    "schema_mismatch": true,
+    "market_valid": true,
+    "date_column_valid": true,
+    "date_consistent": true,
+    "timezone_valid": true,
+    "interval_valid": true,
+    "source_valid": true,
+    "simulation_check": true,
+    "rows": 96,
+    "expected_rows": 96,
+    "missing": 0,
+    "duplicates": 0,
+    "continuity": 1.0,
+    "extreme_prices": 0,
+    "extreme_price_count": 0
+  },
+  "issues": [],
+  "rows": 96,
+  "missing": 0,
+  "duplicates": 0,
+  "continuity": 1.0,
+  "checked_at": "2026-09-21T16:25:56.952946+08:00"
+}

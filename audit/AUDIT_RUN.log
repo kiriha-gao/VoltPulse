@@ -1,0 +1,537 @@
+================================================================================
+VOLTPULSE AUTOMATED AUDIT & RE-VERIFICATION RUN LOG
+Timestamp: 2026-09-21 16:25:16 CST
+Environment: Python 3.11 Windows, pytest-9.1.1, HiGHS-enabled SciPy 1.15.2
+================================================================================
+
+--------------------------------------------------------------------------------
+COMMAND: pytest -v
+EXEC: "C:\Users\12782\.gemini\antigravity\scratch\voltpulse\.venv\Scripts\python.exe" -m pytest -v
+--------------------------------------------------------------------------------
+EXIT CODE: 0 (Duration: 5.08s)
+--- STDOUT ---
+============================= test session starts =============================
+platform win32 -- Python 3.11.5, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\12782\.gemini\antigravity\scratch\voltpulse\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\12782\.gemini\antigravity\scratch\voltpulse
+configfile: pyproject.toml
+testpaths: tests
+collecting ... collected 27 items
+
+tests/test_backtest.py::test_backtest_engine_14_days PASSED              [  3%]
+tests/test_bess_model.py::test_v2_case_1_constant_non_negative_price PASSED [  7%]
+tests/test_bess_model.py::test_v2_case_2_all_zero_prices_zero_cost PASSED [ 11%]
+tests/test_bess_model.py::test_v2_case_3_low_price_then_high_price PASSED [ 14%]
+tests/test_bess_model.py::test_v2_case_4_all_negative_prices PASSED      [ 18%]
+tests/test_bess_model.py::test_v2_case_5_extreme_prices PASSED           [ 22%]
+tests/test_bess_model.py::test_v2_case_6_high_degradation_cost PASSED    [ 25%]
+tests/test_bess_model.py::test_v2_case_7_time_resolution_invariance PASSED [ 29%]
+tests/test_bess_model.py::test_v2_case_8_enumerable_hand_calculation PASSED [ 33%]
+tests/test_bess_model.py::test_battery_degradation_dual_efc PASSED       [ 37%]
+tests/test_bess_model.py::test_sensitivity_analyzer PASSED               [ 40%]
+tests/test_ingestion.py::test_shandong_adapter_ingest_from_fixture PASSED [ 44%]
+tests/test_ingestion.py::test_shandong_adapter_invalid_csv PASSED        [ 48%]
+tests/test_metrics.py::test_price_metrics_calculator PASSED              [ 51%]
+tests/test_metrics.py::test_negative_price_analyzer PASSED               [ 55%]
+tests/test_metrics.py::test_negative_price_analyzer_no_negative PASSED   [ 59%]
+tests/test_quality.py::test_quality_validator_passes_valid_data PASSED   [ 62%]
+tests/test_quality.py::test_quality_validator_catches_missing_rows PASSED [ 66%]
+tests/test_quality.py::test_quality_validator_catches_missing_values PASSED [ 70%]
+tests/test_quality.py::test_quality_validator_catches_duplicates PASSED  [ 74%]
+tests/test_quality.py::test_quality_validator_catches_extreme_price PASSED [ 77%]
+tests/test_quality.py::test_quality_validator_catches_simulated_in_production PASSED [ 81%]
+tests/test_reporting.py::test_dashboard_builder PASSED                   [ 85%]
+tests/test_reporting.py::test_daily_report_generator PASSED              [ 88%]
+tests/test_storage.py::test_database_manager_append_and_load PASSED      [ 92%]
+tests/test_storage.py::test_database_manager_deduplication PASSED        [ 96%]
+tests/test_storage.py::test_database_manager_sqlite_audit PASSED         [100%]
+
+============================= 27 passed in 4.10s ==============================
+--- STDERR ---
+[Empty]
+
+
+--------------------------------------------------------------------------------
+COMMAND: python scripts/acceptance.py
+EXEC: "C:\Users\12782\.gemini\antigravity\scratch\voltpulse\.venv\Scripts\python.exe" scripts/acceptance.py
+--------------------------------------------------------------------------------
+EXIT CODE: 0 (Duration: 27.41s)
+--- STDOUT ---
+2026-09-21 16:25:21 [INFO] [voltpulse.acceptance] ======================================================================
+2026-09-21 16:25:21 [INFO] [voltpulse.acceptance] VOLTPULSE V2.0 AUTOMATED ACCEPTANCE AUDIT (G0 - G5)
+2026-09-21 16:25:21 [INFO] [voltpulse.acceptance] ======================================================================
+2026-09-21 16:25:21 [INFO] [voltpulse.acceptance] Auditing Gate G0: Data Feasibility & Ingestion...
+2026-09-21 16:25:25 [INFO] [voltpulse.acceptance] Auditing Gate G1: Quality Gate & Storage Closed Loop...
+2026-09-21 16:25:27 [INFO] [voltpulse.acceptance] Auditing Gate G2: BESS HiGHS MILP & Fairness Backtest...
+2026-09-21 16:25:31 [INFO] [voltpulse.acceptance] Auditing Gate G3: Dashboard Builder & Research Reports...
+2026-09-21 16:25:34 [INFO] [voltpulse.acceptance] Auditing Gate G4: Pipeline In Live & Fixture Sandbox...
+2026-09-21 16:25:44 [INFO] [voltpulse.acceptance] Auditing Gate G5: Full Regression Test Suite...
+2026-09-21 16:25:48 [INFO] [voltpulse.acceptance] ======================================================================
+2026-09-21 16:25:48 [INFO] [voltpulse.acceptance] ACCEPTANCE AUDIT COMPLETED. Overall Exit Code: 0
+2026-09-21 16:25:48 [INFO] [voltpulse.acceptance] - Acceptance Record: file:///C:/Users/12782/.gemini/antigravity/scratch/voltpulse/ACCEPTANCE.md
+2026-09-21 16:25:48 [INFO] [voltpulse.acceptance] - Project State:     file:///C:/Users/12782/.gemini/antigravity/scratch/voltpulse/PROJECT_STATE.md
+2026-09-21 16:25:48 [INFO] [voltpulse.acceptance] ======================================================================
+--- STDERR ---
+[Empty]
+
+
+--------------------------------------------------------------------------------
+COMMAND: python scripts/run_probes.py
+EXEC: "C:\Users\12782\.gemini\antigravity\scratch\voltpulse\.venv\Scripts\python.exe" scripts/run_probes.py
+--------------------------------------------------------------------------------
+EXIT CODE: 0 (Duration: 4.27s)
+--- STDOUT ---
+Creating disposable copy at: C:\Users\12782\AppData\Local\Temp\tmp2zsr7idn\voltpulse_disposable
+Running independent probe script on disposable project...
+--- STDOUT ---
+Generated 1344 rows across 14 days at C:\Users\12782\AppData\Local\Temp\tmp_l2zm5ok\shandong_sample.csv
+2026-09-21 16:25:51 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-01 (96 candidate rows)
+2026-09-21 16:25:51 [WARNING] [voltpulse.quality] [shandong] Quality audit FAILED for date 2026-08-01: ['Date mismatch: timestamps do not belong to target_date 2026-08-01', 'Simulation gate rejection: is_simulated=True data rejected in production QC']
+2026-09-21 16:25:51 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-01 (96 candidate rows)
+2026-09-21 16:25:51 [WARNING] [voltpulse.quality] [shandong] Quality audit FAILED for date 2026-08-01: ['Interval mismatch: expected 15 min, got [60]', 'Simulation gate rejection: is_simulated=True data rejected in production QC']
+2026-09-21 16:25:51 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-01 (96 candidate rows)
+2026-09-21 16:25:52 [WARNING] [voltpulse.quality] [shandong] Quality audit FAILED for date 2026-08-01: ["Market mismatch: expected 'shandong', found ['shanxi']", 'Simulation gate rejection: is_simulated=True data rejected in production QC']
+2026-09-21 16:25:52 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-01 (96 candidate rows)
+2026-09-21 16:25:52 [WARNING] [voltpulse.quality] [shandong] Quality audit FAILED for date 2026-08-01: ['Simulation gate rejection: is_simulated=True data rejected in production QC']
+2026-09-21 16:25:52 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-01 (96 candidate rows)
+2026-09-21 16:25:52 [WARNING] [voltpulse.quality] [shandong] Quality audit FAILED for date 2026-08-01: ['Missing source_url: 96 rows have null or empty source_url', 'Simulation gate rejection: is_simulated=True data rejected in production QC']
+2026-09-21 16:25:52 [INFO] [voltpulse.ingestion.base] Raw data archived at: C:\Users\12782\AppData\Local\Temp\tmp_l2zm5ok\raw\shandong\2026\08\2026-08-01\original.csv (SHA256: a7937b64...)
+2026-09-21 16:25:52 [INFO] [voltpulse.ingestion.base] Raw data archived at: C:\Users\12782\AppData\Local\Temp\tmp_l2zm5ok\raw\shandong\2026\08\2026-08-01\revision_2_16367aac.csv (SHA256: 16367aac...)
+2026-09-21 16:25:52 [WARNING] [voltpulse.optimization.benchmark] Fixed schedule window failed terminal balance: final energy 152.88 != 100.00. Executing no-arbitrage idle fallback per Spec 10.4.
+2026-09-21 16:25:52 [INFO] [voltpulse.backtest] [shandong] Commencing backtest across 1 candidate dates: 2026-08-01 to 2026-08-01
+2026-09-21 16:25:52 [WARNING] [voltpulse.backtest] Skipping incomplete date 2026-08-01: got 48 periods, expected 96
+2026-09-21 16:25:52 [ERROR] [voltpulse.backtest] Input contains mixed price_types without explicit price_type parameter
+2026-09-21 16:25:52 [INFO] [voltpulse.pipeline] ============================================================
+2026-09-21 16:25:52 [INFO] [voltpulse.pipeline] VOLTPULSE PIPELINE START: mode=fixture, market=shandong, date=None, days=1
+2026-09-21 16:25:52 [INFO] [voltpulse.pipeline] ============================================================
+2026-09-21 16:25:52 [INFO] [voltpulse.pipeline] Running in FIXTURE mode: Isolated in sandbox C:\Users\12782\AppData\Local\Temp\tmp2zsr7idn\voltpulse_disposable\data\sandbox
+2026-09-21 16:25:52 [INFO] [voltpulse.pipeline] >> Ingestion attempt for date: 2026-08-01
+2026-09-21 16:25:52 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion initiated for date: 2026-08-01
+2026-09-21 16:25:52 [INFO] [voltpulse.ingestion.shandong] Checking fixture dataset at C:\Users\12782\AppData\Local\Temp\tmp2zsr7idn\voltpulse_disposable\tests\fixtures\shandong_sample.csv for date 2026-08-01
+2026-09-21 16:25:52 [INFO] [voltpulse.ingestion.base] Raw data archived at: C:\Users\12782\AppData\Local\Temp\tmp2zsr7idn\voltpulse_disposable\data\sandbox\raw\shandong\2026\08\2026-08-01\original.csv (SHA256: 22815275...)
+2026-09-21 16:25:52 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion normalized 96 records for date: 2026-08-01
+2026-09-21 16:25:52 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-01 (96 candidate rows)
+2026-09-21 16:25:52 [INFO] [voltpulse.quality] [shandong] Quality audit PASSED for date 2026-08-01. Report saved at: C:\Users\12782\AppData\Local\Temp\tmp2zsr7idn\voltpulse_disposable\data\sandbox\quality\2026-08-01.json
+2026-09-21 16:25:52 [INFO] [voltpulse.storage] Parquet updated atomically: 96 total records stored at C:\Users\12782\AppData\Local\Temp\tmp2zsr7idn\voltpulse_disposable\data\sandbox\spot_prices.parquet
+2026-09-21 16:25:52 [INFO] [voltpulse.pipeline] >> Running Price Analytics Engine...
+2026-09-21 16:25:52 [INFO] [voltpulse.analytics.price] Daily price metrics computed for 1 days; saved to C:\Users\12782\AppData\Local\Temp\tmp2zsr7idn\voltpulse_disposable\data\sandbox\results\.staging\daily_metrics.parquet
+2026-09-21 16:25:52 [INFO] [voltpulse.pipeline] >> Running HiGHS MILP BESS Optimization & Rolling Backtest Engine...
+2026-09-21 16:25:52 [INFO] [voltpulse.backtest] [shandong] Commencing backtest across 1 candidate dates: 2026-08-01 to 2026-08-01
+2026-09-21 16:25:52 [INFO] [voltpulse.backtest] Backtest results saved: 2 records at C:\Users\12782\AppData\Local\Temp\tmp2zsr7idn\voltpulse_disposable\data\sandbox\results\.staging\backtest_results.parquet
+2026-09-21 16:25:52 [INFO] [voltpulse.reporting.dashboard] Dashboard successfully built and deployed at: C:\Users\12782\AppData\Local\Temp\tmp2zsr7idn\voltpulse_disposable\data\sandbox\results\.staging\index.html
+2026-09-21 16:25:52 [INFO] [voltpulse.reporting.daily] Daily analytical report successfully generated at C:\Users\12782\AppData\Local\Temp\tmp2zsr7idn\voltpulse_disposable\data\sandbox\results\.staging\2026-08-01.md
+2026-09-21 16:25:52 [INFO] [voltpulse.pipeline] ============================================================
+2026-09-21 16:25:52 [INFO] [voltpulse.pipeline] VOLTPULSE PIPELINE COMPLETED SUCCESSFULLY:
+2026-09-21 16:25:52 [INFO] [voltpulse.pipeline] - Mode: fixture
+2026-09-21 16:25:52 [INFO] [voltpulse.pipeline] - Health Status: healthy
+2026-09-21 16:25:52 [INFO] [voltpulse.pipeline] - Tracked Days: 1
+2026-09-21 16:25:52 [INFO] [voltpulse.pipeline] - Latest Market Date: 2026-08-01
+2026-09-21 16:25:52 [INFO] [voltpulse.pipeline] - Latest Day Storage Net Profit: RMB 104,265.42
+2026-09-21 16:25:52 [INFO] [voltpulse.pipeline] - Cumulative Net Profit: RMB 104,265.42
+2026-09-21 16:25:52 [INFO] [voltpulse.pipeline] ============================================================
+2026-09-21 16:25:52 [INFO] [voltpulse.pipeline] ============================================================
+2026-09-21 16:25:52 [INFO] [voltpulse.pipeline] VOLTPULSE PIPELINE START: mode=live, market=shandong, date=None, days=1
+2026-09-21 16:25:52 [INFO] [voltpulse.pipeline] ============================================================
+2026-09-21 16:25:52 [INFO] [voltpulse.pipeline] Running in LIVE mode: processing production dataset.
+2026-09-21 16:25:52 [INFO] [voltpulse.pipeline] >> Ingestion attempt for date: 2026-09-21
+2026-09-21 16:25:52 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion initiated for date: 2026-09-21
+2026-09-21 16:25:52 [WARNING] [voltpulse.ingestion.shandong] Online fetch for Shandong spot price failed: INDEPENDENT_AUDIT_INJECTED_DOWNLOAD_FAILURE
+2026-09-21 16:25:52 [ERROR] [voltpulse.pipeline] Download/Ingestion failed for date 2026-09-21: Data unavailable for Shandong on 2026-09-21: INDEPENDENT_AUDIT_INJECTED_DOWNLOAD_FAILURE
+2026-09-21 16:25:52 [ERROR] [voltpulse.pipeline] LIVE PIPELINE FAILED: 1 date(s) failed ingestion. Primary error: FileNotFoundError
+2026-09-21 16:25:52 [INFO] [voltpulse.acceptance] ======================================================================
+2026-09-21 16:25:52 [INFO] [voltpulse.acceptance] VOLTPULSE V2.0 AUTOMATED ACCEPTANCE AUDIT (G0 - G5)
+2026-09-21 16:25:52 [INFO] [voltpulse.acceptance] ======================================================================
+2026-09-21 16:25:52 [INFO] [voltpulse.acceptance] Auditing Gate G0: Data Feasibility & Ingestion...
+2026-09-21 16:25:52 [INFO] [voltpulse.acceptance] Auditing Gate G1: Quality Gate & Storage Closed Loop...
+2026-09-21 16:25:52 [INFO] [voltpulse.acceptance] Auditing Gate G2: BESS HiGHS MILP & Fairness Backtest...
+2026-09-21 16:25:52 [INFO] [voltpulse.acceptance] Auditing Gate G3: Dashboard Builder & Research Reports...
+2026-09-21 16:25:52 [INFO] [voltpulse.acceptance] Auditing Gate G4: Pipeline In Live & Fixture Sandbox...
+2026-09-21 16:25:52 [INFO] [voltpulse.acceptance] Auditing Gate G5: Full Regression Test Suite...
+2026-09-21 16:25:52 [INFO] [voltpulse.acceptance] ======================================================================
+2026-09-21 16:25:52 [INFO] [voltpulse.acceptance] ACCEPTANCE AUDIT COMPLETED. Overall Exit Code: 1
+2026-09-21 16:25:52 [INFO] [voltpulse.acceptance] - Acceptance Record: file:///C:/Users/12782/AppData/Local/Temp/tmp2zsr7idn/voltpulse_disposable/ACCEPTANCE.md
+2026-09-21 16:25:52 [INFO] [voltpulse.acceptance] - Project State:     file:///C:/Users/12782/AppData/Local/Temp/tmp2zsr7idn/voltpulse_disposable/PROJECT_STATE.md
+2026-09-21 16:25:52 [INFO] [voltpulse.acceptance] ======================================================================
+{
+  "synthetic": {
+    "all_1344_records_equal": true,
+    "raw_96_prices_equal": true,
+    "processed_96_prices_equal": true,
+    "raw_hash_matches_metadata": true
+  },
+  "qc_invalid_inputs_accepted": {
+    "wrong_date": false,
+    "wrong_interval": false,
+    "wrong_market": false,
+    "simulated": false,
+    "missing_source": false
+  },
+  "raw_revision_files": [
+    "shandong\\2026\\08\\2026-08-01\\metadata.json",
+    "shandong\\2026\\08\\2026-08-01\\original.csv",
+    "shandong\\2026\\08\\2026-08-01\\revision_2_16367aac.csv"
+  ],
+  "raw_revision_content": "first",
+  "model_default": {
+    "net_profit": 104253.4,
+    "final_soc": 0.5,
+    "cell_throughput_q_mwh": 640.0,
+    "efc_rated": 1.6,
+    "efc_usable": 2.0,
+    "independent_energy_residual": 1.0658141036401503e-14,
+    "simultaneous_mw": 0.0,
+    "independent_pnl": 104253.39758104389
+  },
+  "model_configured": {
+    "net_profit": 104265.42,
+    "final_soc": 0.5,
+    "cell_throughput_q_mwh": 640.0,
+    "efc_rated": 1.6,
+    "efc_usable": 2.0,
+    "independent_energy_residual": 1.0658141036401503e-14,
+    "simultaneous_mw": 0.0,
+    "independent_pnl": 104265.41796702822
+  },
+  "short_window_terminal_soc": 0.5,
+  "half_day_backtested_rows": 0,
+  "mixed_da_rt_result_rows": 0,
+  "fixture_pipeline": {
+    "exit": 0,
+    "production_parquet_exists": false,
+    "public_html_exists": false
+  },
+  "all_downloads_failed": {
+    "exit": 1,
+    "status": {
+      "status": "failed",
+      "pipeline": "failed",
+      "last_attempt": "2026-09-21T16:25:52.910755+08:00",
+      "last_success": null,
+      "expected_next_check": "2026-09-22T17:00:00+08:00",
+      "error_category": "FileNotFoundError",
+      "market": "shandong",
+      "schema_version": "2.0.0"
+    }
+  },
+  "acceptance_all_commands_failed": {
+    "exit": 1,
+    "state_says_release_eligible": false,
+    "state_says_all_tests_passed": false
+  },
+  "evidence_profit_totals": {
+    "fixed_peak_valley": 638314.1,
+    "perfect_foresight": 1738263.73
+  }
+}
+
+--- STDERR ---
+
+Exit code: 0
+
+--- VERIFICATION OF PROBES ---
+Probe 1 (Synthetic Data Detection):
+  all_1344_records_equal: True
+  raw_96_prices_equal: True
+  processed_96_prices_equal: True
+  raw_hash_matches_metadata: True
+Probe 2 (QC Invalid Inputs Accepted - all must be False):
+  wrong_date: False -> PASS (Rejected)
+  wrong_interval: False -> PASS (Rejected)
+  wrong_market: False -> PASS (Rejected)
+  simulated: False -> PASS (Rejected)
+  missing_source: False -> PASS (Rejected)
+Probe 3 (Raw Archive Immutable Revision):
+  Content of original.csv: 'first' (Expected: 'first' -> PASS)
+  Revision files: ['shandong\\2026\\08\\2026-08-01\\metadata.json', 'shandong\\2026\\08\\2026-08-01\\original.csv', 'shandong\\2026\\08\\2026-08-01\\revision_2_16367aac.csv']
+Probe 4 (Short Window Terminal SOC): 0.5 (Expected: 0.50 -> PASS)
+Probe 5 (Half Day Rows): 0 (Expected: 0 -> PASS)
+Probe 5 (Mixed DA/RT Rows): 0 (Expected: 0 -> PASS)
+Probe 6 (Fixture Pipeline Sandbox Isolation):
+  Exit code: 0 (Expected: 0)
+  Production parquet exists: False (Expected: False -> PASS)
+  Public html exists: False (Expected: False -> PASS)
+Probe 7 (All Live Downloads Failed):
+  Exit code: 1 (Expected: 1 -> PASS)
+  Status beacon: failed (Expected: 'failed' -> PASS)
+Probe 8 (Acceptance Dynamic Reporting When Commands Fail):
+  Exit code: 1 (Expected: 1 -> PASS)
+  Says release eligible: False (Expected: False -> PASS)
+  Says all tests passed: False (Expected: False -> PASS)
+Probe 9 (Evidence Backtest Profit Totals): {'fixed_peak_valley': 638314.1, 'perfect_foresight': 1738263.73}
+
+ALL ORIGINAL PROBE ASSERTIONS PASSED 100% (EXIT CODE: 0)
+--- STDERR ---
+[Empty]
+
+
+--------------------------------------------------------------------------------
+COMMAND: python scripts/run_extra_probes.py
+EXEC: "C:\Users\12782\.gemini\antigravity\scratch\voltpulse\.venv\Scripts\python.exe" scripts/run_extra_probes.py
+--------------------------------------------------------------------------------
+EXIT CODE: 0 (Duration: 3.98s)
+--- STDOUT ---
+2026-09-21 16:25:55 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-01 (96 candidate rows)
+2026-09-21 16:25:55 [WARNING] [voltpulse.quality] [shandong] Quality audit FAILED for date 2026-08-01: ["Date column mismatch: expected '2026-08-01', found ['2026-08-02']", 'Simulation gate rejection: is_simulated=True data rejected in production QC']
+2026-09-21 16:25:55 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-01 (96 candidate rows)
+2026-09-21 16:25:55 [WARNING] [voltpulse.quality] [shandong] Quality audit FAILED for date 2026-08-01: ['Missing is_simulated flag: 96 rows have null simulation status', 'Integrity conflict: source_url indicates synthetic data but is_simulated=False']
+2026-09-21 16:25:55 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-01 (96 candidate rows)
+2026-09-21 16:25:55 [WARNING] [voltpulse.quality] [shandong] Quality audit FAILED for date 2026-08-01: ['Integrity conflict: source_url indicates synthetic data but is_simulated=False']
+2026-09-21 16:25:55 [INFO] [voltpulse.ingestion.base] Raw data archived at: C:\Users\12782\AppData\Local\Temp\tmp2zbzei3t\raw\shandong\2026\08\2026-08-01\original.csv (SHA256: a7937b64...)
+2026-09-21 16:25:55 [INFO] [voltpulse.ingestion.base] Raw data archived at: C:\Users\12782\AppData\Local\Temp\tmp2zbzei3t\raw\shandong\2026\08\2026-08-01\revision_2_16367aac.csv (SHA256: 16367aac...)
+2026-09-21 16:25:55 [WARNING] [voltpulse.optimization.benchmark] Fixed schedule window failed terminal balance: final energy 100.00 != 120.00. Executing no-arbitrage idle fallback per Spec 10.4.
+2026-09-21 16:25:55 [INFO] [voltpulse.backtest] [shandong] Commencing backtest across 1 candidate dates: 2026-08-01 to 2026-08-01
+2026-09-21 16:25:55 [WARNING] [voltpulse.backtest] Skipping date 2026-08-01: timestamps do not match date column
+2026-09-21 16:25:55 [INFO] [voltpulse.pipeline] ============================================================
+2026-09-21 16:25:55 [INFO] [voltpulse.pipeline] VOLTPULSE PIPELINE START: mode=fixture, market=shandong, date=None, days=1
+2026-09-21 16:25:55 [INFO] [voltpulse.pipeline] ============================================================
+2026-09-21 16:25:55 [INFO] [voltpulse.pipeline] Running in FIXTURE mode: Isolated in sandbox C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox
+2026-09-21 16:25:55 [INFO] [voltpulse.pipeline] >> Ingestion attempt for date: 2026-08-01
+2026-09-21 16:25:55 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion initiated for date: 2026-08-01
+2026-09-21 16:25:55 [INFO] [voltpulse.ingestion.shandong] Checking fixture dataset at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\tests\fixtures\shandong_sample.csv for date 2026-08-01
+2026-09-21 16:25:55 [INFO] [voltpulse.ingestion.base] Raw data archived at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\raw\shandong\2026\08\2026-08-01\original.csv (SHA256: 22815275...)
+2026-09-21 16:25:55 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion normalized 96 records for date: 2026-08-01
+2026-09-21 16:25:55 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-01 (96 candidate rows)
+2026-09-21 16:25:55 [INFO] [voltpulse.quality] [shandong] Quality audit PASSED for date 2026-08-01. Report saved at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\quality\2026-08-01.json
+2026-09-21 16:25:55 [INFO] [voltpulse.storage] Parquet updated atomically: 1344 total records stored at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\spot_prices.parquet
+2026-09-21 16:25:55 [INFO] [voltpulse.pipeline] >> Running Price Analytics Engine...
+2026-09-21 16:25:55 [INFO] [voltpulse.analytics.price] Daily price metrics computed for 14 days; saved to C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\results\.staging\daily_metrics.parquet
+2026-09-21 16:25:55 [INFO] [voltpulse.pipeline] >> Running HiGHS MILP BESS Optimization & Rolling Backtest Engine...
+2026-09-21 16:25:55 [INFO] [voltpulse.backtest] [shandong] Commencing backtest across 14 candidate dates: 2026-08-01 to 2026-08-14
+2026-09-21 16:25:56 [INFO] [voltpulse.backtest] Backtest results saved: 28 records at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\results\.staging\backtest_results.parquet
+2026-09-21 16:25:56 [INFO] [voltpulse.reporting.dashboard] Dashboard successfully built and deployed at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\results\.staging\index.html
+2026-09-21 16:25:56 [INFO] [voltpulse.reporting.daily] Daily analytical report successfully generated at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\results\.staging\2026-08-14.md
+2026-09-21 16:25:56 [INFO] [voltpulse.pipeline] ============================================================
+2026-09-21 16:25:56 [INFO] [voltpulse.pipeline] VOLTPULSE PIPELINE COMPLETED SUCCESSFULLY:
+2026-09-21 16:25:56 [INFO] [voltpulse.pipeline] - Mode: fixture
+2026-09-21 16:25:56 [INFO] [voltpulse.pipeline] - Health Status: healthy
+2026-09-21 16:25:56 [INFO] [voltpulse.pipeline] - Tracked Days: 14
+2026-09-21 16:25:56 [INFO] [voltpulse.pipeline] - Latest Market Date: 2026-08-14
+2026-09-21 16:25:56 [INFO] [voltpulse.pipeline] - Latest Day Storage Net Profit: RMB 136,323.80
+2026-09-21 16:25:56 [INFO] [voltpulse.pipeline] - Cumulative Net Profit: RMB 1,738,263.73
+2026-09-21 16:25:56 [INFO] [voltpulse.pipeline] ============================================================
+2026-09-21 16:25:56 [INFO] [voltpulse.pipeline] ============================================================
+2026-09-21 16:25:56 [INFO] [voltpulse.pipeline] VOLTPULSE PIPELINE START: mode=live, market=shandong, date=None, days=1
+2026-09-21 16:25:56 [INFO] [voltpulse.pipeline] ============================================================
+2026-09-21 16:25:56 [INFO] [voltpulse.pipeline] Running in LIVE mode: processing production dataset.
+2026-09-21 16:25:56 [INFO] [voltpulse.pipeline] >> Ingestion attempt for date: 2026-09-21
+2026-09-21 16:25:56 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-09-21 (96 candidate rows)
+2026-09-21 16:25:56 [INFO] [voltpulse.quality] [shandong] Quality audit PASSED for date 2026-09-21. Report saved at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\metadata\quality\2026-09-21.json
+2026-09-21 16:25:57 [INFO] [voltpulse.storage] Parquet updated atomically: 192 total records stored at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\processed\spot_prices.parquet
+2026-09-21 16:25:57 [INFO] [voltpulse.pipeline] >> Running Price Analytics Engine...
+2026-09-21 16:25:57 [INFO] [voltpulse.analytics.price] Daily price metrics computed for 2 days; saved to C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\results\.staging\daily_metrics.parquet
+2026-09-21 16:25:57 [INFO] [voltpulse.pipeline] >> Running HiGHS MILP BESS Optimization & Rolling Backtest Engine...
+2026-09-21 16:25:57 [ERROR] [voltpulse.pipeline] PIPELINE CRITICAL FAILURE: INJECTED_MODEL_FAILURE
+{
+  "date_column_wrong": false,
+  "simulation_null": false,
+  "synthetic_source_false_flag": false,
+  "same_revision_repeat_files": [
+    "original.csv",
+    "revision_2_16367aac.csv"
+  ],
+  "unequal_initial_final_fallback": {
+    "status": "INFEASIBLE_WINDOW_IDLE_FALLBACK",
+    "final_soc": 0.5
+  },
+  "backtest_wrong_timestamp_date_rows": 0,
+  "fixture_preserved_preexisting_page": true,
+  "model_failure_return": 1,
+  "status_after_model_failure": {
+    "status": "failed",
+    "pipeline": "failed",
+    "last_attempt": "2026-09-21T16:25:56.930704+08:00",
+    "last_success": "prior-success",
+    "expected_next_check": "2026-09-22T17:00:00+08:00",
+    "error_category": "RuntimeError",
+    "market": "shandong",
+    "schema_version": "2.0.0"
+  },
+  "metrics_written_before_failure": false,
+  "old_evidence_simulation_values": [
+    true
+  ]
+}
+
+ALL EXTRA PROBE ASSERTIONS PASSED 100% (EXIT CODE: 0)
+--- STDERR ---
+[Empty]
+
+
+--------------------------------------------------------------------------------
+COMMAND: python scripts/pipeline.py --mode fixture
+EXEC: "C:\Users\12782\.gemini\antigravity\scratch\voltpulse\.venv\Scripts\python.exe" scripts/pipeline.py --mode fixture
+--------------------------------------------------------------------------------
+EXIT CODE: 0 (Duration: 4.92s)
+--- STDOUT ---
+2026-09-21 16:25:59 [INFO] [voltpulse.pipeline] ============================================================
+2026-09-21 16:25:59 [INFO] [voltpulse.pipeline] VOLTPULSE PIPELINE START: mode=fixture, market=shandong, date=None, days=14
+2026-09-21 16:25:59 [INFO] [voltpulse.pipeline] ============================================================
+2026-09-21 16:25:59 [INFO] [voltpulse.pipeline] Running in FIXTURE mode: Isolated in sandbox C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox
+2026-09-21 16:25:59 [INFO] [voltpulse.pipeline] >> Ingestion attempt for date: 2026-08-01
+2026-09-21 16:25:59 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion initiated for date: 2026-08-01
+2026-09-21 16:25:59 [INFO] [voltpulse.ingestion.shandong] Checking fixture dataset at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\tests\fixtures\shandong_sample.csv for date 2026-08-01
+2026-09-21 16:25:59 [INFO] [voltpulse.ingestion.base] Raw data archived at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\raw\shandong\2026\08\2026-08-01\original.csv (SHA256: 22815275...)
+2026-09-21 16:25:59 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion normalized 96 records for date: 2026-08-01
+2026-09-21 16:25:59 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-01 (96 candidate rows)
+2026-09-21 16:25:59 [INFO] [voltpulse.quality] [shandong] Quality audit PASSED for date 2026-08-01. Report saved at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\quality\2026-08-01.json
+2026-09-21 16:25:59 [INFO] [voltpulse.storage] Parquet updated atomically: 1344 total records stored at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\spot_prices.parquet
+2026-09-21 16:25:59 [INFO] [voltpulse.pipeline] >> Ingestion attempt for date: 2026-08-02
+2026-09-21 16:25:59 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion initiated for date: 2026-08-02
+2026-09-21 16:25:59 [INFO] [voltpulse.ingestion.shandong] Checking fixture dataset at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\tests\fixtures\shandong_sample.csv for date 2026-08-02
+2026-09-21 16:25:59 [INFO] [voltpulse.ingestion.base] Raw data archived at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\raw\shandong\2026\08\2026-08-02\original.csv (SHA256: 362796fd...)
+2026-09-21 16:25:59 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion normalized 96 records for date: 2026-08-02
+2026-09-21 16:25:59 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-02 (96 candidate rows)
+2026-09-21 16:25:59 [INFO] [voltpulse.quality] [shandong] Quality audit PASSED for date 2026-08-02. Report saved at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\quality\2026-08-02.json
+2026-09-21 16:25:59 [INFO] [voltpulse.storage] Parquet updated atomically: 1344 total records stored at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\spot_prices.parquet
+2026-09-21 16:25:59 [INFO] [voltpulse.pipeline] >> Ingestion attempt for date: 2026-08-03
+2026-09-21 16:25:59 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion initiated for date: 2026-08-03
+2026-09-21 16:25:59 [INFO] [voltpulse.ingestion.shandong] Checking fixture dataset at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\tests\fixtures\shandong_sample.csv for date 2026-08-03
+2026-09-21 16:25:59 [INFO] [voltpulse.ingestion.base] Raw data archived at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\raw\shandong\2026\08\2026-08-03\original.csv (SHA256: 4fb6f765...)
+2026-09-21 16:25:59 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion normalized 96 records for date: 2026-08-03
+2026-09-21 16:25:59 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-03 (96 candidate rows)
+2026-09-21 16:25:59 [INFO] [voltpulse.quality] [shandong] Quality audit PASSED for date 2026-08-03. Report saved at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\quality\2026-08-03.json
+2026-09-21 16:25:59 [INFO] [voltpulse.storage] Parquet updated atomically: 1344 total records stored at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\spot_prices.parquet
+2026-09-21 16:25:59 [INFO] [voltpulse.pipeline] >> Ingestion attempt for date: 2026-08-04
+2026-09-21 16:25:59 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion initiated for date: 2026-08-04
+2026-09-21 16:25:59 [INFO] [voltpulse.ingestion.shandong] Checking fixture dataset at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\tests\fixtures\shandong_sample.csv for date 2026-08-04
+2026-09-21 16:25:59 [INFO] [voltpulse.ingestion.base] Raw data archived at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\raw\shandong\2026\08\2026-08-04\original.csv (SHA256: f97069b7...)
+2026-09-21 16:25:59 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion normalized 96 records for date: 2026-08-04
+2026-09-21 16:25:59 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-04 (96 candidate rows)
+2026-09-21 16:25:59 [INFO] [voltpulse.quality] [shandong] Quality audit PASSED for date 2026-08-04. Report saved at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\quality\2026-08-04.json
+2026-09-21 16:26:00 [INFO] [voltpulse.storage] Parquet updated atomically: 1344 total records stored at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\spot_prices.parquet
+2026-09-21 16:26:00 [INFO] [voltpulse.pipeline] >> Ingestion attempt for date: 2026-08-05
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion initiated for date: 2026-08-05
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.shandong] Checking fixture dataset at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\tests\fixtures\shandong_sample.csv for date 2026-08-05
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] Raw data archived at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\raw\shandong\2026\08\2026-08-05\original.csv (SHA256: af88335f...)
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion normalized 96 records for date: 2026-08-05
+2026-09-21 16:26:00 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-05 (96 candidate rows)
+2026-09-21 16:26:00 [INFO] [voltpulse.quality] [shandong] Quality audit PASSED for date 2026-08-05. Report saved at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\quality\2026-08-05.json
+2026-09-21 16:26:00 [INFO] [voltpulse.storage] Parquet updated atomically: 1344 total records stored at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\spot_prices.parquet
+2026-09-21 16:26:00 [INFO] [voltpulse.pipeline] >> Ingestion attempt for date: 2026-08-06
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion initiated for date: 2026-08-06
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.shandong] Checking fixture dataset at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\tests\fixtures\shandong_sample.csv for date 2026-08-06
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] Raw data archived at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\raw\shandong\2026\08\2026-08-06\original.csv (SHA256: 1b5d7492...)
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion normalized 96 records for date: 2026-08-06
+2026-09-21 16:26:00 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-06 (96 candidate rows)
+2026-09-21 16:26:00 [INFO] [voltpulse.quality] [shandong] Quality audit PASSED for date 2026-08-06. Report saved at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\quality\2026-08-06.json
+2026-09-21 16:26:00 [INFO] [voltpulse.storage] Parquet updated atomically: 1344 total records stored at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\spot_prices.parquet
+2026-09-21 16:26:00 [INFO] [voltpulse.pipeline] >> Ingestion attempt for date: 2026-08-07
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion initiated for date: 2026-08-07
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.shandong] Checking fixture dataset at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\tests\fixtures\shandong_sample.csv for date 2026-08-07
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] Raw data archived at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\raw\shandong\2026\08\2026-08-07\original.csv (SHA256: 5a550bf3...)
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion normalized 96 records for date: 2026-08-07
+2026-09-21 16:26:00 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-07 (96 candidate rows)
+2026-09-21 16:26:00 [INFO] [voltpulse.quality] [shandong] Quality audit PASSED for date 2026-08-07. Report saved at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\quality\2026-08-07.json
+2026-09-21 16:26:00 [INFO] [voltpulse.storage] Parquet updated atomically: 1344 total records stored at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\spot_prices.parquet
+2026-09-21 16:26:00 [INFO] [voltpulse.pipeline] >> Ingestion attempt for date: 2026-08-08
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion initiated for date: 2026-08-08
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.shandong] Checking fixture dataset at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\tests\fixtures\shandong_sample.csv for date 2026-08-08
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] Raw data archived at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\raw\shandong\2026\08\2026-08-08\original.csv (SHA256: 01de96ff...)
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion normalized 96 records for date: 2026-08-08
+2026-09-21 16:26:00 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-08 (96 candidate rows)
+2026-09-21 16:26:00 [INFO] [voltpulse.quality] [shandong] Quality audit PASSED for date 2026-08-08. Report saved at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\quality\2026-08-08.json
+2026-09-21 16:26:00 [INFO] [voltpulse.storage] Parquet updated atomically: 1344 total records stored at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\spot_prices.parquet
+2026-09-21 16:26:00 [INFO] [voltpulse.pipeline] >> Ingestion attempt for date: 2026-08-09
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion initiated for date: 2026-08-09
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.shandong] Checking fixture dataset at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\tests\fixtures\shandong_sample.csv for date 2026-08-09
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] Raw data archived at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\raw\shandong\2026\08\2026-08-09\original.csv (SHA256: 35f5e8d4...)
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion normalized 96 records for date: 2026-08-09
+2026-09-21 16:26:00 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-09 (96 candidate rows)
+2026-09-21 16:26:00 [INFO] [voltpulse.quality] [shandong] Quality audit PASSED for date 2026-08-09. Report saved at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\quality\2026-08-09.json
+2026-09-21 16:26:00 [INFO] [voltpulse.storage] Parquet updated atomically: 1344 total records stored at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\spot_prices.parquet
+2026-09-21 16:26:00 [INFO] [voltpulse.pipeline] >> Ingestion attempt for date: 2026-08-10
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion initiated for date: 2026-08-10
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.shandong] Checking fixture dataset at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\tests\fixtures\shandong_sample.csv for date 2026-08-10
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] Raw data archived at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\raw\shandong\2026\08\2026-08-10\original.csv (SHA256: d978bd5b...)
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion normalized 96 records for date: 2026-08-10
+2026-09-21 16:26:00 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-10 (96 candidate rows)
+2026-09-21 16:26:00 [INFO] [voltpulse.quality] [shandong] Quality audit PASSED for date 2026-08-10. Report saved at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\quality\2026-08-10.json
+2026-09-21 16:26:00 [INFO] [voltpulse.storage] Parquet updated atomically: 1344 total records stored at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\spot_prices.parquet
+2026-09-21 16:26:00 [INFO] [voltpulse.pipeline] >> Ingestion attempt for date: 2026-08-11
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion initiated for date: 2026-08-11
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.shandong] Checking fixture dataset at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\tests\fixtures\shandong_sample.csv for date 2026-08-11
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] Raw data archived at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\raw\shandong\2026\08\2026-08-11\original.csv (SHA256: ac2ace2c...)
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion normalized 96 records for date: 2026-08-11
+2026-09-21 16:26:00 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-11 (96 candidate rows)
+2026-09-21 16:26:00 [INFO] [voltpulse.quality] [shandong] Quality audit PASSED for date 2026-08-11. Report saved at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\quality\2026-08-11.json
+2026-09-21 16:26:00 [INFO] [voltpulse.storage] Parquet updated atomically: 1344 total records stored at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\spot_prices.parquet
+2026-09-21 16:26:00 [INFO] [voltpulse.pipeline] >> Ingestion attempt for date: 2026-08-12
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion initiated for date: 2026-08-12
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.shandong] Checking fixture dataset at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\tests\fixtures\shandong_sample.csv for date 2026-08-12
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] Raw data archived at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\raw\shandong\2026\08\2026-08-12\original.csv (SHA256: 3fd2f5d3...)
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion normalized 96 records for date: 2026-08-12
+2026-09-21 16:26:00 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-12 (96 candidate rows)
+2026-09-21 16:26:00 [INFO] [voltpulse.quality] [shandong] Quality audit PASSED for date 2026-08-12. Report saved at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\quality\2026-08-12.json
+2026-09-21 16:26:00 [INFO] [voltpulse.storage] Parquet updated atomically: 1344 total records stored at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\spot_prices.parquet
+2026-09-21 16:26:00 [INFO] [voltpulse.pipeline] >> Ingestion attempt for date: 2026-08-13
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion initiated for date: 2026-08-13
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.shandong] Checking fixture dataset at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\tests\fixtures\shandong_sample.csv for date 2026-08-13
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] Raw data archived at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\raw\shandong\2026\08\2026-08-13\original.csv (SHA256: 8372628a...)
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion normalized 96 records for date: 2026-08-13
+2026-09-21 16:26:00 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-13 (96 candidate rows)
+2026-09-21 16:26:00 [INFO] [voltpulse.quality] [shandong] Quality audit PASSED for date 2026-08-13. Report saved at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\quality\2026-08-13.json
+2026-09-21 16:26:00 [INFO] [voltpulse.storage] Parquet updated atomically: 1344 total records stored at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\spot_prices.parquet
+2026-09-21 16:26:00 [INFO] [voltpulse.pipeline] >> Ingestion attempt for date: 2026-08-14
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion initiated for date: 2026-08-14
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.shandong] Checking fixture dataset at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\tests\fixtures\shandong_sample.csv for date 2026-08-14
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] Raw data archived at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\raw\shandong\2026\08\2026-08-14\original.csv (SHA256: e0c963b9...)
+2026-09-21 16:26:00 [INFO] [voltpulse.ingestion.base] [shandong] Ingestion normalized 96 records for date: 2026-08-14
+2026-09-21 16:26:00 [INFO] [voltpulse.quality] [shandong] Commencing quality audit for date: 2026-08-14 (96 candidate rows)
+2026-09-21 16:26:00 [INFO] [voltpulse.quality] [shandong] Quality audit PASSED for date 2026-08-14. Report saved at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\quality\2026-08-14.json
+2026-09-21 16:26:00 [INFO] [voltpulse.storage] Parquet updated atomically: 1344 total records stored at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\spot_prices.parquet
+2026-09-21 16:26:00 [INFO] [voltpulse.pipeline] >> Running Price Analytics Engine...
+2026-09-21 16:26:01 [INFO] [voltpulse.analytics.price] Daily price metrics computed for 14 days; saved to C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\results\.staging\daily_metrics.parquet
+2026-09-21 16:26:01 [INFO] [voltpulse.pipeline] >> Running HiGHS MILP BESS Optimization & Rolling Backtest Engine...
+2026-09-21 16:26:01 [INFO] [voltpulse.backtest] [shandong] Commencing backtest across 14 candidate dates: 2026-08-01 to 2026-08-14
+2026-09-21 16:26:01 [INFO] [voltpulse.backtest] Backtest results saved: 28 records at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\results\.staging\backtest_results.parquet
+2026-09-21 16:26:01 [INFO] [voltpulse.reporting.dashboard] Dashboard successfully built and deployed at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\results\.staging\index.html
+2026-09-21 16:26:01 [INFO] [voltpulse.reporting.daily] Daily analytical report successfully generated at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\sandbox\results\.staging\2026-08-14.md
+2026-09-21 16:26:02 [INFO] [voltpulse.pipeline] ============================================================
+2026-09-21 16:26:02 [INFO] [voltpulse.pipeline] VOLTPULSE PIPELINE COMPLETED SUCCESSFULLY:
+2026-09-21 16:26:02 [INFO] [voltpulse.pipeline] - Mode: fixture
+2026-09-21 16:26:02 [INFO] [voltpulse.pipeline] - Health Status: healthy
+2026-09-21 16:26:02 [INFO] [voltpulse.pipeline] - Tracked Days: 14
+2026-09-21 16:26:02 [INFO] [voltpulse.pipeline] - Latest Market Date: 2026-08-14
+2026-09-21 16:26:02 [INFO] [voltpulse.pipeline] - Latest Day Storage Net Profit: RMB 136,323.80
+2026-09-21 16:26:02 [INFO] [voltpulse.pipeline] - Cumulative Net Profit: RMB 1,738,263.73
+2026-09-21 16:26:02 [INFO] [voltpulse.pipeline] ============================================================
+--- STDERR ---
+[Empty]
+
+
+--------------------------------------------------------------------------------
+COMMAND: python scripts/build_dashboard.py
+EXEC: "C:\Users\12782\.gemini\antigravity\scratch\voltpulse\.venv\Scripts\python.exe" scripts/build_dashboard.py
+--------------------------------------------------------------------------------
+EXIT CODE: 0 (Duration: 3.01s)
+--- STDOUT ---
+2026-09-21 16:26:03 [INFO] [voltpulse.build_dashboard] Using 14-day benchmark dataset from tests/fixtures/shandong_sample.csv...
+2026-09-21 16:26:04 [INFO] [voltpulse.analytics.price] Daily price metrics computed for 14 days; saved to C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\results\daily_metrics.parquet
+2026-09-21 16:26:04 [INFO] [voltpulse.backtest] [shandong] Commencing backtest across 14 candidate dates: 2026-08-01 to 2026-08-14
+2026-09-21 16:26:04 [INFO] [voltpulse.build_dashboard] Compiling mobile-responsive HTML application...
+2026-09-21 16:26:05 [INFO] [voltpulse.reporting.dashboard] Dashboard successfully built and deployed at: C:\Users\12782\.gemini\antigravity\scratch\voltpulse\public\index.html
+2026-09-21 16:26:05 [INFO] [voltpulse.build_dashboard] Generating daily analytical report for 2026-08-14...
+2026-09-21 16:26:05 [INFO] [voltpulse.reporting.daily] Daily analytical report successfully generated at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\reports\daily\2026-08-14.md
+2026-09-21 16:26:05 [INFO] [voltpulse.build_dashboard] ============================================================
+2026-09-21 16:26:05 [INFO] [voltpulse.build_dashboard] DASHBOARD BUILD COMPLETE:
+2026-09-21 16:26:05 [INFO] [voltpulse.build_dashboard] - Web Dashboard: file:///C:/Users/12782/.gemini/antigravity/scratch/voltpulse/public/index.html
+2026-09-21 16:26:05 [INFO] [voltpulse.build_dashboard] - Daily Report:  file:///C:/Users/12782/.gemini/antigravity/scratch/voltpulse/reports/daily/2026-08-14.md
+2026-09-21 16:26:05 [INFO] [voltpulse.build_dashboard] ============================================================
+--- STDERR ---
+[Empty]
+
+
+--------------------------------------------------------------------------------
+COMMAND: python scripts/build_research_report.py
+EXEC: "C:\Users\12782\.gemini\antigravity\scratch\voltpulse\.venv\Scripts\python.exe" scripts/build_research_report.py
+--------------------------------------------------------------------------------
+EXIT CODE: 0 (Duration: 3.12s)
+--- STDOUT ---
+2026-09-21 16:26:07 [INFO] [voltpulse.research_report] Using 14-day benchmark dataset from tests/fixtures/shandong_sample.csv...
+2026-09-21 16:26:07 [INFO] [voltpulse.analytics.price] Daily price metrics computed for 14 days; saved to C:\Users\12782\.gemini\antigravity\scratch\voltpulse\data\results\daily_metrics.parquet
+2026-09-21 16:26:07 [INFO] [voltpulse.backtest] [shandong] Commencing backtest across 14 candidate dates: 2026-08-01 to 2026-08-14
+2026-09-21 16:26:07 [INFO] [voltpulse.research_report] Executing sensitivity analysis matrix across Efficiency, Duration, and Degradation...
+2026-09-21 16:26:08 [INFO] [voltpulse.research_report] Research technical report successfully generated at C:\Users\12782\.gemini\antigravity\scratch\voltpulse\reports\research\voltpulse_report.md
+--- STDERR ---
+[Empty]
+

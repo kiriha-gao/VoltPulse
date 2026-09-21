@@ -1,0 +1,24 @@
+{
+  "market": "shandong",
+  "date": "2026-08-01",
+  "source": "VoltPulse Synthetic Benchmark (Duck Curve Simulation)",
+  "source_url": "synthetic://shandong-duck-curve-generator",
+  "is_simulated": true,
+  "status": "SUCCESS",
+  "sha256": "373547557529bdddc99d03ea8339b5739a00092e7d68de8cd7b4b5e25318f8a7",
+  "latest_sha256": "373547557529bdddc99d03ea8339b5739a00092e7d68de8cd7b4b5e25318f8a7",
+  "file_name": "raw_sample_2026-08-01.csv",
+  "latest_file": "raw_sample_2026-08-01.csv",
+  "retrieved_at": "2026-09-21T16:00:00+08:00",
+  "size_bytes": 19561,
+  "revisions": [
+    {
+      "revision_id": 0,
+      "file_name": "raw_sample_2026-08-01.csv",
+      "sha256": "373547557529bdddc99d03ea8339b5739a00092e7d68de8cd7b4b5e25318f8a7",
+      "size_bytes": 19561,
+      "retrieved_at": "2026-09-21T16:00:00+08:00",
+      "status": "SUCCESS"
+    }
+  ]
+}
