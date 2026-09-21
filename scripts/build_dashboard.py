@@ -35,7 +35,14 @@ def build(market: str = "shandong"):
             prices_df = pd.read_parquet(parquet_prices)
             metrics_df = pd.read_parquet(daily_metrics_file)
             backtest_df = pd.read_parquet(backtest_file)
-            if len(prices_df) < 1344:
+            # Filter strictly by requested market to avoid cross-market mixture
+            if "market" in prices_df.columns:
+                prices_df = prices_df[prices_df["market"] == market]
+            if "market" in metrics_df.columns:
+                metrics_df = metrics_df[metrics_df["market"] == market]
+            if "market" in backtest_df.columns:
+                backtest_df = backtest_df[backtest_df["market"] == market]
+            if prices_df.empty or metrics_df.empty or backtest_df.empty:
                 prices_df = None
         except Exception:
             prices_df = None
@@ -45,11 +52,16 @@ def build(market: str = "shandong"):
         fixture_path = project_root / "tests" / "fixtures" / fixture_filename
         if not fixture_path.exists():
             fixture_path = project_root / "tests" / "fixtures" / "shandong_sample.csv"
-        logger.info(f"Using 14-day benchmark dataset from {fixture_path.name} for market={market}...")
+        logger.info(f"Production dataset not available for market={market}; using isolated benchmark fixture from {fixture_path.name}...")
         prices_df = pd.read_csv(fixture_path)
+        if "market" in prices_df.columns:
+            prices_df = prices_df[prices_df["market"] == market]
         from voltpulse.analytics.price_metrics import PriceMetricsCalculator
         from voltpulse.backtest.engine import BacktestEngine
-        metrics_df = PriceMetricsCalculator.compute_and_save_all(prices_df, daily_metrics_file)
+        # Isolated demo output path in sandbox to avoid writing to production results_dir
+        demo_dir = project_root / "data" / "sandbox" / "results"
+        demo_metrics_file = demo_dir / f"demo_metrics_{market}.parquet"
+        metrics_df = PriceMetricsCalculator.compute_and_save_all(prices_df, demo_metrics_file)
         storage_cfg = config.get_storage_config()
         benchmark_cfg = config.get_benchmark_config()
         engine = BacktestEngine(storage_config=storage_cfg, benchmark_config=benchmark_cfg)

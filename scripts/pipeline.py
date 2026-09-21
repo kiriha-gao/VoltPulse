@@ -13,14 +13,36 @@ sys.path.insert(0, str(project_root / "src"))
 from voltpulse.utils.config import get_config
 from voltpulse.utils.logging import get_logger
 from voltpulse.ingestion.shandong import ShandongAdapter
+from voltpulse.ingestion.jiangsu import JiangsuAdapter
 from voltpulse.processing.quality import DataQualityValidator
 from voltpulse.storage.database import DatabaseManager
 from voltpulse.analytics.price_metrics import PriceMetricsCalculator
 from voltpulse.backtest.engine import BacktestEngine
 from typing import Optional
 from voltpulse.optimization.sensitivity import SensitivityAnalyzer
+import os
 
 logger = get_logger("voltpulse.pipeline")
+
+
+def _create_market_adapter(market_name: str, market_cfg: dict, raw_dir: Path, fixture_path: Optional[Path] = None):
+    """Factory creating appropriate market ingestion adapter conforming to market name."""
+    if market_name == "jiangsu":
+        return JiangsuAdapter(market_cfg, raw_dir, fixture_path=fixture_path)
+    return ShandongAdapter(market_cfg, raw_dir, fixture_path=fixture_path)
+
+
+def _atomic_publish(src: Path, dst: Path):
+    """Publishes a file atomically by copying to temporary file and replacing target."""
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    temp_dst = dst.with_name(f"{dst.name}.staging_{os.getpid()}")
+    try:
+        shutil.copy2(src, temp_dst)
+        temp_dst.replace(dst)
+    except Exception:
+        if temp_dst.exists():
+            temp_dst.unlink()
+        raise
 
 
 def run_pipeline(market_name: str = "shandong", target_date: Optional[str] = None,
@@ -79,9 +101,12 @@ def run_pipeline(market_name: str = "shandong", target_date: Optional[str] = Non
         reports_dir = sandbox_dir / "reports"
         allow_simulated = True
 
-        fixture_path = fixtures_dir / "shandong_sample.csv"
-        adapter = ShandongAdapter(market_cfg, raw_dir, fixture_path=fixture_path)
-        logger.info(f"Running in FIXTURE mode: Isolated in sandbox {sandbox_dir}")
+        fixture_filename = f"{market_name}_sample.csv"
+        fixture_path = fixtures_dir / fixture_filename
+        if not fixture_path.exists():
+            fixture_path = fixtures_dir / "shandong_sample.csv"
+        adapter = _create_market_adapter(market_name, market_cfg, raw_dir, fixture_path=fixture_path)
+        logger.info(f"Running in FIXTURE mode: Isolated in sandbox {sandbox_dir} for market={market_name}")
     else:
         # Production Paths
         raw_dir = config.get_path("raw_dir")
@@ -94,8 +119,8 @@ def run_pipeline(market_name: str = "shandong", target_date: Optional[str] = Non
         reports_dir = project_root / "reports" / "daily"
         allow_simulated = False
 
-        adapter = ShandongAdapter(market_cfg, raw_dir, fixture_path=None)
-        logger.info("Running in LIVE mode: processing production dataset.")
+        adapter = _create_market_adapter(market_name, market_cfg, raw_dir, fixture_path=None)
+        logger.info(f"Running in LIVE mode: processing production dataset for market={market_name}.")
 
     results_dir.mkdir(parents=True, exist_ok=True)
     quality_dir.mkdir(parents=True, exist_ok=True)
@@ -230,12 +255,12 @@ def run_pipeline(market_name: str = "shandong", target_date: Optional[str] = Non
         reports_dir.mkdir(parents=True, exist_ok=True)
         public_html.parent.mkdir(parents=True, exist_ok=True)
 
-        shutil.copy2(staged_metrics_file, results_dir / "daily_metrics.parquet")
-        shutil.copy2(staged_backtest_file, results_dir / "backtest_results.parquet")
-        shutil.copy2(staged_sensitivity_file, results_dir / "sensitivity_results.json")
-        shutil.copy2(staged_html, public_html)
+        _atomic_publish(staged_metrics_file, results_dir / "daily_metrics.parquet")
+        _atomic_publish(staged_backtest_file, results_dir / "backtest_results.parquet")
+        _atomic_publish(staged_sensitivity_file, results_dir / "sensitivity_results.json")
+        _atomic_publish(staged_html, public_html)
         if staged_report.exists():
-            shutil.copy2(staged_report, reports_dir / f"{latest_date}.md")
+            _atomic_publish(staged_report, reports_dir / f"{latest_date}.md")
 
         shutil.rmtree(stage_dir, ignore_errors=True)
 

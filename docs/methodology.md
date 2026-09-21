@@ -68,7 +68,7 @@ $$E(t) = E(t-1) + \eta_{\text{ch}} P_{\text{ch}}(t) \Delta t - \frac{1}{\eta_{\t
 ### 3.4 物理约束与严密互斥
 1. **充放电功率与 0-1 互斥约束**：
    $$0 \le P_{\text{ch}}(t) \le u_t \cdot P_{\text{rated}}, \quad 0 \le P_{\text{dis}}(t) \le (1 - u_t) \cdot P_{\text{rated}}, \quad u_t \in \{0, 1\}$$
-   通过 HiGHS MILP 严格约束 $P_{\text{ch}}(t) \cdot P_{\text{dis}}(t) \equiv 0$，即使在极度恶劣的深负电价场景下，彻底杜绝虚假同时充放骗取双向补贴的漏洞。
+   通过 HiGHS MILP 严格约束 $P_{\text{ch}}(t) \cdot P_{\text{dis}}(t) \equiv 0$，即使在深负电价场景下，杜绝同一时段同时充放电造成不合逻辑的能量内耗与非物理套利漏洞。
 2. **容量边界约束**：
    $$E_{\min} \le E(t) \le E_{\max}, \quad \text{其中 } E_{\min} = 20 \, \text{MWh}, \, E_{\max} = 180 \, \text{MWh}$$
 3. **初末电量平衡硬约束 (Terminal SOC Constraint)**：
@@ -78,21 +78,21 @@ $$E(t) = E(t-1) + \eta_{\text{ch}} P_{\text{ch}}(t) \Delta t - \frac{1}{\eta_{\t
 ### 3.5 目标函数
 优化目标为全天能量市场套利净收益最大化（售电收入 - 购电成本 - 电池衰减折旧）：
 $$\max \sum_{t=1}^T \Delta t \left[ \lambda_t P_{\text{dis}}(t) - \lambda_t P_{\text{ch}}(t) - c_{\text{deg}} P_{\text{dis}}(t) \right]$$
-其中 $c_{\text{deg}} = 30 \, \text{RMB/MWh}$ 为度电吞吐衰减折旧成本。
+其中 $c_{\text{deg}} = 30 \, \text{RMB/吞吐 MWh}$ 为度电吞吐衰减折旧成本。
 
 ---
 
-## 四、 电池寿命衰减与对偶循环计量 (Degradation & Dual EFC)
+## 四、 电池寿命衰减与双分母循环计量 (Degradation & Dual EFC Metrics)
 
 ### 4.1 吞吐量折旧模型
 本项目采用标准吞吐量折旧模型：
 $$\text{Cost}_{\text{deg}} = c_{\text{deg}} \cdot \sum_{t=1}^T P_{\text{dis}}(t) \Delta t = 30 \times \text{Discharge MWh}$$
 
-### 4.2 对偶等效满充满放循环次数 (Dual EFC Metric)
+### 4.2 双分母等效满充满放循环次数 (Dual EFC Metrics)
 为消除行业不同口径歧义，系统严格同步计算并输出两套 EFC：
-1. **基于可用容量的对偶循环 (Usable Capacity EFC)**：
+1. **基于可用容量的循环次数 (Usable Capacity EFC)**：
    $$\text{EFC}_{\text{usable}} = \frac{\sum_{t=1}^T P_{\text{dis}}(t) \Delta t}{E_{\text{usable}}} = \frac{\text{Total Discharge MWh}}{160 \, \text{MWh}}$$
-2. **基于额定标称容量的对偶循环 (Rated Capacity EFC)**：
+2. **基于额定标称容量的循环次数 (Rated Capacity EFC)**：
    $$\text{EFC}_{\text{rated}} = \frac{\sum_{t=1}^T P_{\text{dis}}(t) \Delta t}{E_{\text{nom}}} = \frac{\text{Total Discharge MWh}}{200 \, \text{MWh}}$$
 
 ---
