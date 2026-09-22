@@ -43,3 +43,8 @@ Thumbs.db
 *.sqlite
 data/sandbox/
 temp*/
+
+# Private notes & local workspace
+*.private.*
+*local_notes*
+

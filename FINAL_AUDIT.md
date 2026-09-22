@@ -118,5 +118,5 @@ tests/test_storage.py::test_database_manager_sqlite_audit PASSED         [100%]
 - `RUNBOOK.md`：部署、运行、补数、容错与回滚操作手册
 - `docs/methodology.md`：现货市场与 BESS 运筹优化数学方法论
 - `docs/data_sources.md`：官方公开数据源口径与合规性说明
-- `docs/project_brief.md`：15 道国网/五大发电/储能高频面试问答
-- `docs/strategy_comparison.md`：针对电网调控、现货交易、储能算法三大求职方向的简历描述方案
+- `docs/project_brief.md`：电力现货观察与储能策略实验工具项目简报
+- `docs/strategy_comparison.md`：三策略公平因果对比与转折期时滞失真深度实证报告

@@ -2093,7 +2093,7 @@ Perfect Foresight
 
 # 42. 技术要点与答辩解析
 
-项目必须生成：
+项目整理核心要点文档：
 
 ```text
 docs/project_brief.md
