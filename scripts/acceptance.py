@@ -18,7 +18,15 @@ logger = get_logger("voltpulse.acceptance")
 def run_cmd(cmd: str, cwd: Path = project_root) -> tuple[int, str, float]:
     """Runs a shell command portably using sys.executable and returns exit code, output, and elapsed time."""
     start_t = time.time()
-    res = subprocess.run(cmd, cwd=str(cwd), shell=True, capture_output=True, text=True)
+    res = subprocess.run(
+        cmd,
+        cwd=str(cwd),
+        shell=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
     elapsed = time.time() - start_t
     output = (res.stdout or "") + "\n" + (res.stderr or "")
     return res.returncode, output.strip(), elapsed

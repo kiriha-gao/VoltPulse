@@ -30,6 +30,8 @@ with tempfile.TemporaryDirectory() as td:
         [sys.executable, "-X", "utf8", str(probe_file), str(disp), str(out_json)],
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         env=env
     )
 
