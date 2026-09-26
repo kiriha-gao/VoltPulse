@@ -204,29 +204,40 @@ class HistoricalAdjustedStrategy:
         energy = np.zeros(T)
         curr_e = self.e_initial
 
+        adjusted = False
         for t in range(T):
             desired_ch = float(planned_charge_mw[t]) if t < len(planned_charge_mw) else 0.0
             desired_dis = float(planned_discharge_mw[t]) if t < len(planned_discharge_mw) else 0.0
 
+            # Replay the prior-day schedule subject to today's physical state.
             if desired_ch > 0 and curr_e < self.e_max:
-                max_ch_energy = (self.e_max - curr_e) / self.charge_eff
-                p_ch_val = min(desired_ch, self.power_mw, max_ch_energy / dt)
-                p_ch[t] = max(0.0, p_ch_val)
-                curr_e += self.charge_eff * p_ch[t] * dt
-
+                p_ch_val = min(desired_ch, self.power_mw, (self.e_max - curr_e) / (self.charge_eff * dt))
+                candidate_e = curr_e + self.charge_eff * p_ch_val * dt
             elif desired_dis > 0 and curr_e > self.e_min:
-                max_dis_energy = (curr_e - self.e_min) * self.discharge_eff
-                p_dis_val = min(desired_dis, self.power_mw, max_dis_energy / dt)
-                p_dis[t] = max(0.0, p_dis_val)
-                curr_e -= (p_dis[t] * dt) / self.discharge_eff
+                p_dis_val = min(desired_dis, self.power_mw, (curr_e - self.e_min) * self.discharge_eff / dt)
+                candidate_e = curr_e - p_dis_val * dt / self.discharge_eff
+            else:
+                candidate_e = curr_e
 
+            # Preserve enough charging or discharging capacity to reach the
+            # terminal target. This uses only SOC, equipment limits and time;
+            # today's prices never affect the dispatch decision.
+            remaining = T - t - 1
+            reachable_min = max(self.e_min, self.e_final - remaining * self.charge_eff * self.power_mw * dt)
+            reachable_max = min(self.e_max, self.e_final + remaining * self.power_mw * dt / self.discharge_eff)
+            next_e = min(max(candidate_e, reachable_min), reachable_max)
+            if next_e > curr_e:
+                p_ch[t] = (next_e - curr_e) / (self.charge_eff * dt)
+            elif next_e < curr_e:
+                p_dis[t] = (curr_e - next_e) * self.discharge_eff / dt
+            if abs(next_e - candidate_e) > 1e-8:
+                adjusted = True
+            curr_e = next_e
             energy[t] = curr_e
 
-        # Terminal SOC verification & status
         if abs(curr_e - self.e_final) > 1e-2:
-            status_label = "TERMINAL_ADJUSTED"
-        else:
-            status_label = "SUCCESS"
+            raise ValueError("Historical schedule cannot reach terminal SOC with configured power and time")
+        status_label = "TERMINAL_ADJUSTED" if adjusted else "SUCCESS"
 
         soc_traj = energy / self.energy_mwh
         charge_energy_mwh = float(np.sum(p_ch) * dt)
@@ -249,7 +260,7 @@ class HistoricalAdjustedStrategy:
             "solver": "Lagged_Replay",
             "status": status_label,
             "is_theoretical_optimum": False,
-            "is_feasible": True,
+            "is_feasible": abs(curr_e - self.e_final) <= 1e-2,
             "gross_revenue": round(gross_revenue, 2),
             "charging_cost": round(charging_cost, 2),
             "gross_profit": round(gross_profit, 2),
