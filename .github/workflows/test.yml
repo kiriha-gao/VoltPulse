@@ -52,3 +52,4 @@ jobs:
       - name: 8. Verify Synthetic Research Report Builds
         run: |
           python scripts/build_research_report.py --market shandong
+          python scripts/build_research_report.py --market jiangsu
