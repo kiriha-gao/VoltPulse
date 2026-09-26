@@ -1,13 +1,13 @@
 # VoltPulse
-### China Power Spot Market Dynamics & Battery Energy Storage (BESS) Optimal Dispatch Platform
-### 面向江苏（双峰两充两放）与山东（负电价鸭子曲线）的电力现货与储能运筹优化框架
+### Power Price Scenarios & Battery Storage Dispatch Practice
+### 电力现货价格情景与储能调度分析实践
 
 <p align="center">
-  <a href="https://github.com/kiriha-gao/VoltPulse/actions/workflows/test.yml"><img src="https://img.shields.io/badge/CI-Passing%20(Ubuntu%20%7C%20Windows)-10b981.svg?style=flat-square&logo=githubactions" alt="CI Status"></a>
+  <a href="https://github.com/kiriha-gao/VoltPulse/actions/workflows/test.yml"><img src="https://github.com/kiriha-gao/VoltPulse/actions/workflows/test.yml/badge.svg" alt="CI Status"></a>
   <a href="https://kiriha-gao.github.io/VoltPulse/"><img src="https://img.shields.io/badge/Live%20Demo-Interactive%20Dashboard-38bdf8.svg?style=flat-square&logo=googlechrome" alt="Live Demo"></a>
   <a href="https://highs.dev/"><img src="https://img.shields.io/badge/Optimization-SciPy%20HiGHS%20MILP-8b5cf6.svg?style=flat-square" alt="HiGHS Solver"></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB.svg?style=flat-square&logo=python" alt="Python"></a>
-  <a href="tests/"><img src="https://img.shields.io/badge/Tests-28%2F28%20Passed-10b981.svg?style=flat-square" alt="Tests"></a>
+  <a href="tests/"><img src="https://img.shields.io/badge/Tests-pytest-10b981.svg?style=flat-square" alt="Tests"></a>
   <a href="NOTES.md"><img src="https://img.shields.io/badge/Notes-Engineering%20Logs-orange.svg?style=flat-square" alt="Engineering Notes"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square" alt="License"></a>
   <a href="CITATION.cff"><img src="https://img.shields.io/badge/Cite-CITATION.cff-blue.svg?style=flat-square" alt="Citation"></a>
@@ -17,16 +17,13 @@
 
 ## 1. 研究背景与核心问题 (Motivation)
 
-我国电力现货市场正在从“试点探索”全面转向“长周期连续结算与商业化运行”。在不同资源禀赋与用电负荷结构的省份，现货出清电价呈现出截然不同的物理形态，对独立储能（BESS）与虚拟电厂（VPP）的充放电调度提出了完全不同的数学建模与工程要求：
+我对电力现货价格和储能调度感兴趣，因此用 VoltPulse 探索一个具体问题：**看到价格差以后，储能什么时候充放电，为什么理论最优方案不能直接当作实际运行方案？**
 
-1. **江苏电力现货市场（华东工业负荷中枢）**：
-   - 作为全国第一工业用电大省，夏季与冬季尖峰负荷极高（突破 1.4 亿千瓦），呈现显著的**夏冬“早晚双峰”**特征（早高峰 09:00-11:30，晚高峰 18:30-21:30）。
-   - **调度挑战**：储能电站必须采用**“两充两放（Two Cycles per Day）”**以捕捉两个峰谷时段。然而，双充双放使电池日等效满充满放循环次数（EFC）激增至 1.7~1.8，如果只算电能量账面价差而忽略非线性电芯衰减折损，储能项目全生命周期度电成本（LCOS）与内部收益率（IRR）将被严重高估。
-2. **山东电力现货市场（高渗透新能源消纳区）**：
-   - 作为全国分布式光伏装机第一大省，午间极端新能源大发造成净负荷剧烈下凹，形成典型的**“深 V 鸭子曲线”**与**负出清电价**（最低达 -80 RMB/MWh）。
-   - **调度挑战**：储能调度核心在于午间负电价时段受电充电（由电网消纳补贴），并在晚高峰全容量放电。
+项目先用江苏双峰、山东午间低价两种**人为构造的价格情景**验证数据处理、储能约束和策略对比。它们用于观察模型对不同价格形态的响应，**不是两省真实历史出清数据**，也不能证明实际省际收益高低。
 
-**VoltPulse** 是一个基于 Python 3 与 SciPy HiGHS C++ 求解内核构建的高性能运筹优化分析框架。项目通过解耦的适配器架构、严密的混合整数线性规划（MILP）模型与 8 维度数据防御门禁，为储能系统在多区域现货市场下的充放电决策、电池退化成本折算及收益回测提供严谨的量化工具。
+现有程序包括价格数据接入与质量检查、SciPy HiGHS 储能 MILP、固定时段策略和事后最优对照。优化结果在已知全天价格、给定设备参数的前提下计算，用作理论参考。下一步是接入一个来源可追溯的公开价格案例，再检验简单策略与理论参考之间的差距。
+
+改进过程与每一步的完成证据见 [改进记录](docs/PROGRESS.md)。
 
 > [!NOTE]
 > 详细的技术选型对比、为什么放弃 PuLP/Pyomo、以及跨平台 CI 换行符避坑经验，请参阅：  
@@ -41,8 +38,8 @@
 │                                VoltPulse 模块架构与数据流                               │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │ 1. 数据接入层 (Ingestion Adapters)                                                     │
-│    - 江苏交易中心适配器 (JiangsuAdapter): 15分钟出清 / 双峰两充两放特征时序             │
-│    - 山东交易中心适配器 (ShandongAdapter): 15分钟出清 / 鸭子曲线与负电价特征时序        │
+│    - 江苏情景适配器 (JiangsuAdapter): 15 分钟粒度双峰价格样本             │
+│    - 山东情景适配器 (ShandongAdapter): 15 分钟粒度午间低价样本        │
 │    - 统一抽象基类 (MarketDataSource): 具备不可变 SHA-256 原始存档与增量版本管理         │
 │                                                                                        │
 │ 2. 质量防御门禁 (Data Quality Gate)                                                    │
@@ -94,17 +91,17 @@ $$\max \sum_{t=1}^T \Delta t \left[ \lambda_t P_{\text{dis}}(t) - \lambda_t P_{\
 
 > [!IMPORTANT]
 > **基准数据属性声明 (Data Provenance & Simulation Truthfulness)**：  
-> 当前版本包含的山东与江苏 14 天日前出清时序均为**根据两省典型物理负荷与日前出清特征构建的高保真基准仿真算例（Benchmark Synthetic Dataset）**，所有数据全局明确标记 `is_simulated = True` 并带有 `synthetic://` 来源标识。  
+> 当前版本包含的山东与江苏 14 天日前出清时序均为**为验证不同价格形态下的程序行为而构造的合成基准算例（Benchmark Synthetic Dataset）**，所有数据全局明确标记 `is_simulated = True` 并带有 `synthetic://` 来源标识。  
 > 本平台的核心定位是**储能运筹优化模型数学自洽性、HiGHS 求解器性能测试与调度策略对比的算法工程框架**，不声称构成基于电网官方历史结算真实数据的“实证经济学分析”。
 
-在 100MW / 200MWh 储能电站标称参数下，基于两省典型 14 天完整 96 点基准出清时序算例回测对比如下（代码实跑精确输出）：
+在 100MW / 200MWh 储能电站标称参数下，基于两种合成价格情景的 14 天、每日 96 点算例回测对比如下（代码实跑精确输出）：
 
 | 市场区域 | 核心电价形态 | 调度策略 | 14天累计净收益 (RMB) | 日均净利润 (RMB) | 累计 EFC (额定分母) | 累计 EFC (可用分母) | 相对固定策略提升 |
 | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **江苏现货基准 (Jiangsu)** | 早晚双峰工业负荷 | 规则型固定峰谷基准 | ¥950,272.18 | ¥67,876.58 | 11.20 次 | 14.00 次 | 基准线 (Baseline) |
-| **江苏现货基准 (Jiangsu)** | 早晚双峰工业负荷 | **HiGHS 最优调度 (MILP)** | **¥2,209,313.54** | **¥157,808.11** | **22.40 次** | **28.00 次** | **+132.49%** |
-| **山东现货基准 (Shandong)** | 单深 V 负电价鸭子曲线 | 规则型固定峰谷基准 | ¥638,314.10 | ¥45,593.86 | 5.60 次 | 7.00 次 | 基准线 (Baseline) |
-| **山东现货基准 (Shandong)** | 单深 V 负电价鸭子曲线 | **HiGHS 最优调度 (MILP)** | **¥1,738,263.73** | **¥124,161.70** | **22.40 次** | **28.00 次** | **+172.32%** |
+| **江苏合成情景 (Jiangsu)** | 早晚双峰价格形态 | 规则型固定峰谷基准 | ¥950,272.18 | ¥67,876.58 | 11.20 次 | 14.00 次 | 基准线 (Baseline) |
+| **江苏合成情景 (Jiangsu)** | 早晚双峰价格形态 | **HiGHS 最优调度 (MILP)** | **¥2,209,313.54** | **¥157,808.11** | **22.40 次** | **28.00 次** | **+132.49%** |
+| **山东合成情景 (Shandong)** | 午间低价与负价形态 | 规则型固定峰谷基准 | ¥638,314.10 | ¥45,593.86 | 5.60 次 | 7.00 次 | 基准线 (Baseline) |
+| **山东合成情景 (Shandong)** | 午间低价与负价形态 | **HiGHS 最优调度 (MILP)** | **¥1,738,263.73** | **¥124,161.70** | **22.40 次** | **28.00 次** | **+172.32%** |
 
 > [!NOTE]
 > **EFC 循环次数分母定义说明**：
@@ -112,8 +109,8 @@ $$\max \sum_{t=1}^T \Delta t \left[ \lambda_t P_{\text{dis}}(t) - \lambda_t P_{\
 > - **可用容量分母**：$\mathrm{EFC}_{\text{usable}} = \frac{Q}{2 (E_{\max} - E_{\min})} = \frac{Q}{320 \, \text{MWh}}$（反映可用工作区间利用率；单次 10%→90%→10% 满充放计为 1.0 次，14 天对应每日 2.0 次）。
 > - **关于相对增益**：表中 +132.49% 与 +172.32% 是基于 14 天算例的事后全知（Perfect Foresight）上界与固定时段规则在样本内的对照提升，包含放电深度扩容与灵活调度的综合效应，不作为实际部署中的实盘超额收益。
 
-### 核心结论与发现
-1. **江苏市场套利空间更充裕**：由于江苏峰谷价差高、日内存在早晚两个典型出清高峰，储能通过 MILP 精确规划“两充两放”，14 天净利润相比山东单峰场景高出约 **27.1%**。
+### 合成情景中的观察
+1. **江苏双峰情景的模型收益更高**：在这组人为设定的价格和相同设备参数下，事后最优结果比山东午间低价情景高约 **27.1%**。该差异来自情景设定，不能外推为真实省际市场收益排序。
 2. **退化成本对浅循环的抑制机理**：单次电芯能量往返的保本边际门槛价为 $p_{\text{sell}} > \frac{p_{\text{buy}}}{\eta_{\text{ch}}\eta_{\text{dis}}} + \frac{2k}{\eta_{\text{dis}}} \approx \frac{p_{\text{buy}}}{0.85} + 65.08 \, \text{RMB/MWh}$。当价差无法覆盖该门槛时，MILP 会自发保持待机，避免盲目充放电造成电芯亏损。
 
 ---
