@@ -116,7 +116,7 @@ def run_acceptance() -> int:
     # G3: Dashboard & Research Deliverables
     # -------------------------------------------------------------
     logger.info("Auditing Gate G3: Dashboard Builder & Research Reports...")
-    cmd_g3 = f"{py_exec} -m pytest -v tests/test_reporting.py"
+    cmd_g3 = f"{py_exec} -m pytest -v tests/test_reporting.py && {py_exec} scripts/build_research_report.py --market shandong"
     code_g3, out_g3, elapsed_g3 = run_cmd(cmd_g3)
     dashboard_file = project_root / "public" / "index.html"
     has_dashboard = dashboard_file.exists() and dashboard_file.stat().st_size > 5000
@@ -124,12 +124,12 @@ def run_acceptance() -> int:
     has_research_report = research_report_file.exists() and research_report_file.stat().st_size > 1000
     g3_pass = (code_g3 == 0 and has_dashboard and has_research_report)
     gate_results["G3"] = {
-        "title": "关卡 G3：移动端页面与学术级研究材料",
+        "title": "关卡 G3：移动端页面与合成情景分析报告",
         "status": "PASSED" if g3_pass else "FAILED",
         "command": cmd_g3,
         "elapsed": f"{elapsed_g3:.2f}s",
         "evidence": "public/index.html, reports/daily/, docs/methodology.md, reports/research/voltpulse_report.md",
-        "detail": "极速单页看板与学术研究报告生成成功" if g3_pass else "前端看板生成或材料缺失"
+        "detail": "看板测试与合成情景报告生成成功" if g3_pass else "看板测试或情景报告生成失败"
     }
 
     # -------------------------------------------------------------
