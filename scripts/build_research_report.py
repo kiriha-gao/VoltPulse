@@ -127,18 +127,18 @@ def generate_research_report(market: str = "shandong"):
         })
 
     # 4. Assemble Academic Technical Report
-    report_content = f"""# 《基于公开现货市场数据的电价特征与储能优化调度研究》
-### Research on Electricity Price Dynamics and Energy Storage Optimal Dispatch (Synthetic Benchmark Prototype)
+    report_content = f"""# 《合成电价情景下的储能调度分析》
+### Synthetic Price Benchmark and Battery Storage Dispatch Practice
 
-**研究团队**：VoltPulse Project Research Group  
+**项目**：VoltPulse 本科实践  
 **数据周期**：{start_date} 至 {end_date}（共 {num_days} 个基准交易日，累计 {total_records} 条分时样本）  
-**分析标的**：山东电力现货市场基准情景 & 100MW/200MWh 独立储能电站（BESS）  
+**分析情景**：{market} 合成价格序列 & 100MW/200MWh 储能参考设备  
 **数据属性**：合成基准情景时序（Synthetic Duck-Curve Benchmark Dataset, `is_simulated = True`）
 
 ---
 
 ## 摘要 (Abstract)
-高比例可再生能源并网正深刻重塑电力系统的物理与经济特性。本研究基于山东电力现货市场典型特征构建的鸭子曲线基准情景分时时序，运用统计学与运筹学方法，系统测度了典型电价的日内畸变与极端负电价时空分布特征。在此基础上，构建了计及非对称充放效率、电芯双向寿命吞吐折旧及初末电量平衡硬约束的 100MW/200MWh 独立储能电站混合整数线性规划（HiGHS MILP）最优调度模型。
+本分析使用人为构造的分时电价情景，练习价格数据检查和储能策略比较；该样本不能证明真实市场的价格成因或收益水平。在此基础上，构建了计及非对称充放效率、电芯双向寿命吞吐折旧及初末电量平衡硬约束的 100MW/200MWh 独立储能电站混合整数线性规划（HiGHS MILP）最优调度模型。
 
 基准回测与运筹优化验证表明：
 1. 在典型高光伏渗透率日情景中，正午 11:00-15:00 出现深达 `{overall_min_price} RMB/MWh` 的极端负电价，平均日度峰谷差达 `{avg_spread} RMB/MWh`；
@@ -148,7 +148,7 @@ def generate_research_report(market: str = "shandong"):
 ---
 
 ## 1. 研究背景 (Introduction)
-随着我国“双碳”战略推进，山东省新能源装机规模突破千万千瓦级。光伏发电的强日间周期性导致电网净负荷呈现剧烈波动的“鸭子曲线”。当正午常规机组调节深度受限、电网面临局部输电阻塞与消纳压力时，市场边际出清可能出现负电价信号以引导系统消纳与物理平衡。科学评估储能电站在现货电价信号下的调度算法表现与削峰填谷调节价值，是新型电力系统建设的重要技术课题。
+电价会随供需与运行约束变化，储能需要同时考虑价差、效率、SOC 和电池损耗。本项目先用可控的合成情景验证程序，再将真实公开披露的周度均价另列为数据整理案例；两种粒度不混用。
 
 ---
 
@@ -159,7 +159,7 @@ def generate_research_report(market: str = "shandong"):
 - **数据属性**：标注为 `is_simulated = True`，来源标识为 `synthetic://shandong-duck-curve-generator`；
 - **完整性**：{start_date} 至 {end_date} 共 {num_days} 天，无缺失值且均通过质量门禁的严格时间序列与起止边界校验。
 
-> **特别声明**：因当前阶段尚未连接山东电力交易中心内网生产系统（PMOS），本研究数据为严格遵循山东规则特征生成的基准测试数据，用于调度运筹算法的准确性与鲁棒性验证。
+> **特别声明**：本报告使用合成价格，不是交易中心历史出清数据；模型收益不是实际结算收益。
 
 ---
 
@@ -175,12 +175,12 @@ def generate_research_report(market: str = "shandong"):
 
 ## 4. 电价统计特征 (Benchmark Price Dynamics)
 
-| 统计指标 | 基准时序数值 (Benchmark Metrics) | 场景与市场机制特征 |
+| 统计指标 | 基准时序数值 (Benchmark Metrics) | 情景说明 |
 | :--- | :---: | :--- |
-| **样本期平均电价** | `{overall_mean_price} RMB/MWh` | 综合煤电边际成本与午间新能源低价区段 |
-| **全样本最低电价** | `{overall_min_price} RMB/MWh` | 模拟午间高比例光伏大发下的出清深谷 |
-| **全样本最高电价** | `{overall_max_price} RMB/MWh` | 晚高峰 18:00-21:00 负荷顶峰调峰出清 |
-| **平均日峰谷价差** | `{avg_spread} RMB/MWh` | 呈现典型的强双峰单谷特征 |
+| **样本期平均电价** | `{overall_mean_price} RMB/MWh` | 合成样本的价格均值 |
+| **全样本最低电价** | `{overall_min_price} RMB/MWh` | 合成样本的最低价格 |
+| **全样本最高电价** | `{overall_max_price} RMB/MWh` | 合成样本的最高价格 |
+| **平均日峰谷价差** | `{avg_spread} RMB/MWh` | 合成样本逐日峰谷差均值 |
 | **负电价累计时长** | `{total_negative_hours} 小时` | 占总追踪周期的 `{round(total_negative_hours / (num_days * 24) * 100, 2)}%` |
 | **负电价发生天数** | `{negative_days_count} / {num_days} 天` | `{round(negative_days_count / num_days * 100, 1)}%` 的交易日出现深谷负电价区段 |
 
@@ -189,7 +189,7 @@ def generate_research_report(market: str = "shandong"):
 ## 5. 储能优化模型 (BESS MILP Formulation)
 采用 HiGHS 求解器进行混合整数线性规划（MILP）调度优化，引入 0-1 二进制充放互斥变量 $u_t \\in \\{{0, 1\\}}$：
 - **目标函数**：
-  $$\\max \\sum_{{t=1}}^{{T}} \\Delta t \\left[ \\lambda_t P_{{dis}}(t) - \\lambda_t P_{{ch}}(t) - c_{{deg}} P_{{dis}}(t) \\right]$$
+  $$\\max \\sum_{{t=1}}^{{T}} \\Delta t \\left[ \\lambda_t P_{{dis}}(t) - \\lambda_t P_{{ch}}(t) - c_{{deg}} (\eta_{{ch}} P_{{ch}}(t) + P_{{dis}}(t)/\eta_{{dis}}) \\right]$$
 - **充放电功率与互斥约束**：
   $$0 \\le P_{{ch}}(t) \\le u_t \\cdot P_{{rated}}, \\quad 0 \\le P_{{dis}}(t) \\le (1 - u_t) \\cdot P_{{rated}}, \\quad u_t \\in \\{{0, 1\\}}$$
 - **初末荷电守恒**：$E(T) = E(0) = 100 \\, \\text{{MWh}}$；
@@ -204,20 +204,20 @@ def generate_research_report(market: str = "shandong"):
 
 ---
 
-## 7. 实证结果对比 (Empirical Results)
+## 7. 合成算例结果对比 (Synthetic Benchmark Results)
 
 | 评价维度 | 固定峰谷基准 (Fixed) | 理论最优调度 (Perfect Foresight) | 差异与增益 (Delta) |
 | :--- | :---: | :---: | :---: |
 | **累计净收益** | `¥{total_profit_fix:,.2f}` | **`¥{total_profit_pf:,.2f}`** | **+{profit_lift_percent}%** |
 | **等效循环总次数 (EFC)** | `{total_efc_fix} 次` | `{total_efc_pf} 次` | +{round(total_efc_pf - total_efc_fix, 2)} 次 |
 | **电池衰减折旧总额** | `¥{total_deg_cost_fix:,.2f}` | `¥{total_deg_cost_pf:,.2f}` | +¥{round(total_deg_cost_pf - total_deg_cost_fix, 2):,.2f} |
-| **日均净套利收益** | `¥{round(total_profit_fix/num_days, 2):,.2f}` | **`¥{round(total_profit_pf/num_days, 2):,.2f}`** | 显著提升资产套利弹性 |
+| **日均净套利收益** | `¥{round(total_profit_fix/num_days, 2):,.2f}` | **`¥{round(total_profit_pf/num_days, 2):,.2f}`** | 仅表示该算例中的差异 |
 
 ---
 
 ## 8. 参数敏感性分析 (Sensitivity Analysis)
 
-基于最新交易日（{latest_date}）电价曲线开展三维敏感性检验：
+基于最新合成样本日（{latest_date}）电价曲线开展三维敏感性检验：
 
 ### 8.1 充放电综合效率敏感性 (RTE: 85% ~ 90%)
 | 综合效率 (RTE) | 单日净利润 (RMB) | 等效循环 (EFC) | 衰减成本 (RMB) |
