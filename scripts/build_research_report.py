@@ -17,50 +17,44 @@ logger = get_logger("voltpulse.research_report")
 
 def generate_research_report(market: str = "shandong"):
     config = get_config()
-    results_dir = config.get_path("results_dir")
     parquet_prices = config.get_path("spot_prices_parquet")
-    daily_metrics_file = results_dir / "daily_metrics.parquet"
-    backtest_file = results_dir / "backtest_results.parquet"
     output_report_file = project_root / "reports" / "research" / f"voltpulse_{market}_report.md"
     output_report_file.parent.mkdir(parents=True, exist_ok=True)
 
-    # 1. Ensure 14 benchmark days data is loaded
-    if not parquet_prices.exists() or not daily_metrics_file.exists() or not backtest_file.exists():
-        prices_df = None
+    # Use one filtered price series for every figure in this report.
+    if market not in {"jiangsu", "shandong"}:
+        raise ValueError(f"Unsupported benchmark market: {market}")
+    if parquet_prices.exists():
+        prices_df = pd.read_parquet(parquet_prices)
+        if "market" in prices_df.columns:
+            prices_df = prices_df[prices_df["market"] == market]
+        else:
+            prices_df = prices_df.iloc[0:0]
     else:
-        try:
-            prices_df = pd.read_parquet(parquet_prices)
-            metrics_df = pd.read_parquet(daily_metrics_file)
-            backtest_df = pd.read_parquet(backtest_file)
-            if "market" in prices_df.columns:
-                prices_df = prices_df[prices_df["market"] == market]
-            if "market" in metrics_df.columns:
-                metrics_df = metrics_df[metrics_df["market"] == market]
-            if "market" in backtest_df.columns:
-                backtest_df = backtest_df[backtest_df["market"] == market]
-            if prices_df.empty or metrics_df.empty or backtest_df.empty:
-                prices_df = None
-        except Exception:
-            prices_df = None
-
-    if prices_df is None:
-        fixture_filename = f"{market}_sample.csv"
-        fixture_path = project_root / "tests" / "fixtures" / fixture_filename
+        prices_df = pd.DataFrame()
+    if prices_df.empty:
+        fixture_path = project_root / "tests" / "fixtures" / f"{market}_sample.csv"
         if not fixture_path.exists():
-            fixture_path = project_root / "tests" / "fixtures" / "shandong_sample.csv"
-        logger.info(f"Production dataset not available for market={market}; using isolated benchmark fixture from {fixture_path.name}...")
+            raise FileNotFoundError(f"No benchmark data for {market}: {fixture_path}")
+        logger.info(f"Using isolated benchmark fixture from {fixture_path.name}")
         prices_df = pd.read_csv(fixture_path)
         if "market" in prices_df.columns:
             prices_df = prices_df[prices_df["market"] == market]
-        from voltpulse.analytics.price_metrics import PriceMetricsCalculator
-        from voltpulse.backtest.engine import BacktestEngine
-        demo_dir = project_root / "data" / "sandbox" / "results"
-        demo_metrics_file = demo_dir / f"demo_metrics_research_{market}.parquet"
-        metrics_df = PriceMetricsCalculator.compute_and_save_all(prices_df, demo_metrics_file)
-        storage_cfg = config.get_storage_config()
-        benchmark_cfg = config.get_benchmark_config()
-        engine = BacktestEngine(storage_config=storage_cfg, benchmark_config=benchmark_cfg)
-        backtest_df = engine.run_backtest(prices_df, market=market)
+    if prices_df.empty:
+        raise ValueError(f"No benchmark price rows for {market}")
+
+    from voltpulse.analytics.price_metrics import PriceMetricsCalculator
+    from voltpulse.backtest.engine import BacktestEngine
+    demo_dir = project_root / "data" / "sandbox" / "results"
+    demo_dir.mkdir(parents=True, exist_ok=True)
+    metrics_df = PriceMetricsCalculator.compute_and_save_all(
+        prices_df, demo_dir / f"demo_metrics_research_{market}.parquet"
+    )
+    engine = BacktestEngine(
+        storage_config=config.get_storage_config(),
+        benchmark_config=config.get_benchmark_config(),
+    )
+    backtest_df = engine.run_backtest(prices_df, market=market)
 
     if "is_simulated" not in prices_df.columns or not prices_df["is_simulated"].eq(True).all():
         raise ValueError("This benchmark report requires explicitly labeled synthetic prices")
@@ -89,7 +83,8 @@ def generate_research_report(market: str = "shandong"):
     total_efc_fix = round(float(fix_df["efc"].sum()), 2)
     total_deg_cost_pf = round(float(pf_df["degradation_cost"].sum()), 2)
     total_deg_cost_fix = round(float(fix_df["degradation_cost"].sum()), 2)
-    profit_lift_percent = round(((total_profit_pf - total_profit_fix) / total_profit_fix) * 100, 2)
+    profit_lift_percent = round(((total_profit_pf - total_profit_fix) / total_profit_fix) * 100, 2) if total_profit_fix else None
+    lift_label = f"{profit_lift_percent:+.2f}%" if profit_lift_percent is not None else "基准收益为零，百分比不适用"
 
     # 3. Dynamic Sensitivity Analysis
     logger.info("Executing sensitivity analysis matrix across Efficiency, Duration, and Degradation...")
@@ -145,8 +140,8 @@ def generate_research_report(market: str = "shandong"):
 本分析使用人为构造的分时电价情景，练习价格数据检查和储能策略比较；该样本不能证明真实市场的价格成因或收益水平。在此基础上，构建了计及非对称充放效率、电芯双向寿命吞吐折旧及初末电量平衡硬约束的 100MW/200MWh 独立储能电站混合整数线性规划（HiGHS MILP）最优调度模型。
 
 基准回测与运筹优化验证表明：
-1. 在该合成价格情景中，正午 11:00-15:00 出现深达 `{overall_min_price} RMB/MWh` 的最低价格，平均日度峰谷差达 `{avg_spread} RMB/MWh`；
-2. 计及 30 RMB/MWh 电池电芯吞吐衰减成本与严格初末 SOC 约束下，理论最优调度（Perfect Foresight, HiGHS MILP）在 14 天基准测试期内累计实现净收益 `¥{total_profit_pf:,.2f}`，相比传统固定峰谷时段基准策略（`¥{total_profit_fix:,.2f}`）实现 **+{profit_lift_percent}%** 的增益；
+1. 在该合成价格情景中，样本最低电价为 `{overall_min_price} RMB/MWh`，平均日度峰谷差为 `{avg_spread} RMB/MWh`；
+2. 计及 30 RMB/MWh 电池电芯吞吐衰减成本与严格初末 SOC 约束下，理论最优调度（Perfect Foresight, HiGHS MILP）在 {num_days} 天基准测试期内累计实现净收益 `¥{total_profit_pf:,.2f}`，相比传统固定峰谷时段基准策略（`¥{total_profit_fix:,.2f}`）差异为 **{lift_label}**；
 3. 参数敏感性分析表明，储能时长从 2h 扩展至 4h 可提升日内绝对套利收益，但单位容量边际收益递减。本研究定位为算法验证与调度优化原型（Synthetic Benchmark Prototype），不构成基于电网官方历史结算真实数据的实证结论。
 
 ---
@@ -202,7 +197,7 @@ def generate_research_report(market: str = "shandong"):
 ---
 
 ## 6. 回测方法 (Backtesting Methodology)
-对比两套调度策略在 14 天基准序列中的调度表现：
+对比两套调度策略在 {num_days} 天基准序列中的调度表现：
 1. **基准策略 (Fixed Peak-Valley Benchmark)**：正午 11:00-15:00 固定充电，晚间 18:00-22:00 固定放电（遇满即停、遇空即止，异常时安全闲置回退）；
 2. **理论最优 (Perfect Foresight, HiGHS MILP)**：全知条件下的事后理论最优调度，作为调度上限基准。
 
@@ -212,7 +207,7 @@ def generate_research_report(market: str = "shandong"):
 
 | 评价维度 | 固定峰谷基准 (Fixed) | 理论最优调度 (Perfect Foresight) | 差异与增益 (Delta) |
 | :--- | :---: | :---: | :---: |
-| **累计净收益** | `¥{total_profit_fix:,.2f}` | **`¥{total_profit_pf:,.2f}`** | **+{profit_lift_percent}%** |
+| **累计净收益** | `¥{total_profit_fix:,.2f}` | **`¥{total_profit_pf:,.2f}`** | **{lift_label}** |
 | **等效循环总次数 (EFC)** | `{total_efc_fix} 次` | `{total_efc_pf} 次` | +{round(total_efc_pf - total_efc_fix, 2)} 次 |
 | **电池衰减折旧总额** | `¥{total_deg_cost_fix:,.2f}` | `¥{total_deg_cost_pf:,.2f}` | +¥{round(total_deg_cost_pf - total_deg_cost_fix, 2):,.2f} |
 | **日均净套利收益** | `¥{round(total_profit_fix/num_days, 2):,.2f}` | **`¥{round(total_profit_pf/num_days, 2):,.2f}`** | 仅表示该算例中的差异 |
