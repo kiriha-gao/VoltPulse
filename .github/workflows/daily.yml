@@ -1,4 +1,4 @@
-name: VoltPulse Scheduled Daily Dispatch & Report
+name: VoltPulse Scheduled Synthetic Demo Build
 
 on:
   schedule:
@@ -37,7 +37,7 @@ jobs:
           pip install -r requirements.txt
           pip install -e ".[dev]"
 
-      - name: 4. Run VoltPulse Daily Pipeline
+      - name: 4. Run Synthetic Fixture Pipeline
         run: |
           python scripts/pipeline.py --mode fixture --market shandong --backfill-days 14
 
@@ -55,7 +55,12 @@ jobs:
           git config --local user.name "github-actions[bot]"
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add reports/ public/
-          git diff --quiet && git diff --staged --quiet || (git commit -m "chore(daily): auto-update dispatch reports & dashboard [skip ci]" && git push)
+          if git diff --cached --quiet; then
+            echo "No report or dashboard changes to commit"
+          else
+            git commit -m "chore(demo): update synthetic reports and dashboard [skip ci]"
+            git push
+          fi
 
       - name: 8. Configure GitHub Pages
         uses: actions/configure-pages@v4
