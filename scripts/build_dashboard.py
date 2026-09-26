@@ -51,7 +51,7 @@ def build(market: str = "shandong"):
         fixture_filename = f"{market}_sample.csv"
         fixture_path = project_root / "tests" / "fixtures" / fixture_filename
         if not fixture_path.exists():
-            fixture_path = project_root / "tests" / "fixtures" / "shandong_sample.csv"
+            raise FileNotFoundError(f"No benchmark fixture for market={market}: {fixture_path}")
         logger.info(f"Production dataset not available for market={market}; using isolated benchmark fixture from {fixture_path.name}...")
         prices_df = pd.read_csv(fixture_path)
         if "market" in prices_df.columns:
