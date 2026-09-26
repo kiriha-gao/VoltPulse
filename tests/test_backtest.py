@@ -1,6 +1,9 @@
 from pathlib import Path
 import pytest
 import pandas as pd
+import numpy as np
+
+from voltpulse.optimization.benchmark import HistoricalAdjustedStrategy
 
 from voltpulse.backtest.engine import BacktestEngine
 from voltpulse.utils.config import get_config
@@ -54,3 +57,37 @@ def test_backtest_engine_14_days(backtest_engine, historical_prices):
     # Verify explicit strategy filtering works as expected
     legacy_df = backtest_engine.run_backtest(historical_prices, market="shandong", strategies=["perfect_foresight", "fixed_peak_valley"])
     assert len(legacy_df) == 28
+
+
+def test_historical_strategy_corrects_terminal_soc_without_today_prices():
+    strategy = HistoricalAdjustedStrategy({
+        "power_mw": 100.0,
+        "energy_mwh": 200.0,
+        "charge_efficiency": 1.0,
+        "discharge_efficiency": 1.0,
+        "soc_min": 0.0,
+        "soc_max": 1.0,
+        "soc_initial": 0.5,
+        "soc_final": 0.5,
+        "degradation_cost_rmb_per_mwh": 0.0,
+    })
+    planned_charge = np.array([100.0, 0.0, 0.0, 0.0])
+    planned_discharge = np.zeros(4)
+
+    low_prices = strategy.simulate(
+        np.array([10.0, 10.0, 10.0, 10.0]),
+        planned_charge, planned_discharge, interval_minutes=15,
+    )
+    high_prices = strategy.simulate(
+        np.array([100.0, 200.0, 300.0, 400.0]),
+        planned_charge, planned_discharge, interval_minutes=15,
+    )
+
+    assert low_prices["status"] == "TERMINAL_ADJUSTED"
+    assert low_prices["is_feasible"] is True
+    assert low_prices["final_soc"] == pytest.approx(0.5)
+    assert low_prices["p_charge_mw"] == high_prices["p_charge_mw"]
+    assert low_prices["p_discharge_mw"] == high_prices["p_discharge_mw"]
+    assert max(low_prices["p_charge_mw"]) <= 100.0
+    assert max(low_prices["p_discharge_mw"]) <= 100.0
+    assert all(0.0 <= soc <= 1.0 for soc in low_prices["soc"])
