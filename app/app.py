@@ -50,7 +50,7 @@ def load_data():
 df_prices, df_metrics, df_backtest = load_data()
 
 st.title("⚡ VoltPulse — 中国电力现货市场与储能优化平台")
-st.caption("开源自动化研究平台 | 追踪真实电价特征与 100MW/200MWh 储能套利价值")
+st.caption("电价情景与储能调度实践 | 请核对所选日期的数据来源")
 
 if df_prices.empty or df_metrics.empty:
     st.warning("暂无处理后的数据，请先运行数据流水线: `python scripts/pipeline.py`")
@@ -64,6 +64,16 @@ selected_market = st.sidebar.selectbox("选择现货市场", available_markets, 
 market_prices = df_prices[df_prices["market"] == selected_market]
 available_dates = sorted(market_prices["date"].unique().tolist(), reverse=True)
 selected_date = st.sidebar.selectbox("选择交易日", available_dates, index=0)
+
+selected_prices = market_prices[market_prices["date"] == selected_date]
+if "is_simulated" not in selected_prices.columns or selected_prices["is_simulated"].isna().any():
+    st.warning("所选日期的数据属性不完整，请核对原始来源。")
+elif selected_prices["is_simulated"].eq(True).all():
+    st.info("当前展示合成基准数据；调度收益是事后已知全天价格下的模型结果。")
+elif selected_prices["is_simulated"].eq(False).all():
+    st.caption("当前数据标记为非模拟；请结合原始来源核验。")
+else:
+    st.warning("所选日期混合了模拟与非模拟数据，请先检查数据来源。")
 
 # Overview KPIs
 st.subheader(f"📊 市场概览 ({selected_market.upper()} - {selected_date})")
@@ -80,7 +90,7 @@ if not day_metrics.empty:
     if not day_bt.empty:
         pnl = day_bt.iloc[0]["net_profit"]
         efc = day_bt.iloc[0]["efc"]
-        col4.metric("储能日净收益 (LP最优)", f"¥ {pnl:,.2f}", f"EFC 循环: {efc:.2f} 次")
+        col4.metric("储能日模型净收益 (事后 MILP 最优)", f"¥ {pnl:,.2f}", f"EFC 循环: {efc:.2f} 次")
 
 # 1. 24h Spot Price Curve
 st.markdown("### 📈 96 点分时现货出清价格")
