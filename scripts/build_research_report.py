@@ -62,6 +62,10 @@ def generate_research_report(market: str = "shandong"):
         engine = BacktestEngine(storage_config=storage_cfg, benchmark_config=benchmark_cfg)
         backtest_df = engine.run_backtest(prices_df, market=market)
 
+    if "is_simulated" not in prices_df.columns or not prices_df["is_simulated"].eq(True).all():
+        raise ValueError("This benchmark report requires explicitly labeled synthetic prices")
+    source_labels = ", ".join(sorted(prices_df["source_url"].astype(str).unique()))
+
     # 2. Aggregated Statistics
     num_days = int(metrics_df["date"].nunique())
     start_date = str(metrics_df["date"].min())
@@ -133,7 +137,7 @@ def generate_research_report(market: str = "shandong"):
 **项目**：VoltPulse 本科实践  
 **数据周期**：{start_date} 至 {end_date}（共 {num_days} 个基准交易日，累计 {total_records} 条分时样本）  
 **分析情景**：{market} 合成价格序列 & 100MW/200MWh 储能参考设备  
-**数据属性**：合成基准情景时序（Synthetic Duck-Curve Benchmark Dataset, `is_simulated = True`）
+**数据属性**：合成基准情景时序（Synthetic Price Benchmark Dataset, `is_simulated = True`）
 
 ---
 
@@ -141,7 +145,7 @@ def generate_research_report(market: str = "shandong"):
 本分析使用人为构造的分时电价情景，练习价格数据检查和储能策略比较；该样本不能证明真实市场的价格成因或收益水平。在此基础上，构建了计及非对称充放效率、电芯双向寿命吞吐折旧及初末电量平衡硬约束的 100MW/200MWh 独立储能电站混合整数线性规划（HiGHS MILP）最优调度模型。
 
 基准回测与运筹优化验证表明：
-1. 在典型高光伏渗透率日情景中，正午 11:00-15:00 出现深达 `{overall_min_price} RMB/MWh` 的极端负电价，平均日度峰谷差达 `{avg_spread} RMB/MWh`；
+1. 在该合成价格情景中，正午 11:00-15:00 出现深达 `{overall_min_price} RMB/MWh` 的最低价格，平均日度峰谷差达 `{avg_spread} RMB/MWh`；
 2. 计及 30 RMB/MWh 电池电芯吞吐衰减成本与严格初末 SOC 约束下，理论最优调度（Perfect Foresight, HiGHS MILP）在 14 天基准测试期内累计实现净收益 `¥{total_profit_pf:,.2f}`，相比传统固定峰谷时段基准策略（`¥{total_profit_fix:,.2f}`）实现 **+{profit_lift_percent}%** 的增益；
 3. 参数敏感性分析表明，储能时长从 2h 扩展至 4h 可提升日内绝对套利收益，但单位容量边际收益递减。本研究定位为算法验证与调度优化原型（Synthetic Benchmark Prototype），不构成基于电网官方历史结算真实数据的实证结论。
 
@@ -156,7 +160,7 @@ def generate_research_report(market: str = "shandong"):
 本研究所采用的数据序列为 VoltPulse 基准合成时序（Synthetic Benchmark Fixture）：
 - **采样频率**：15 分钟/点，单日 96 个时序截面；
 - **时区标准**：严格采用东八区（`Asia/Shanghai`）；
-- **数据属性**：标注为 `is_simulated = True`，来源标识为 `synthetic://shandong-duck-curve-generator`；
+- **数据属性**：标注为 `is_simulated = True`，来源标识为 `{source_labels}`；
 - **完整性**：{start_date} 至 {end_date} 共 {num_days} 天，无缺失值且均通过质量门禁的严格时间序列与起止边界校验。
 
 > **特别声明**：本报告使用合成价格，不是交易中心历史出清数据；模型收益不是实际结算收益。
