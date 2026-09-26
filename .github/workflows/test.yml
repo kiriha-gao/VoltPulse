@@ -48,3 +48,7 @@ jobs:
       - name: 7. Run Automated Acceptance Audit
         run: |
           python scripts/acceptance.py
+
+      - name: 8. Verify Synthetic Research Report Builds
+        run: |
+          python scripts/build_research_report.py --market shandong
