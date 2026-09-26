@@ -1,0 +1,5 @@
+market,period_start,period_end,day_ahead_weighted_avg_rmb_mwh,real_time_weighted_avg_rmb_mwh,source_url,retrieved_at,is_simulated
+guangdong,2026-06-01,2026-06-07,492,479,https://www.gzpec.cn/news/scyj/202606/t20260612_36450.html,2026-09-26,false
+guangdong,2026-06-08,2026-06-14,428,396,https://www.gzpec.cn/news/scyj/202606/t20260618_36478.html,2026-09-26,false
+guangdong,2026-06-22,2026-06-28,508,481,https://www.gzpec.cn/news/scyj/202607/t20260701_36569.html,2026-09-26,false
+guangdong,2026-06-29,2026-07-05,368,407,https://www.gzpec.cn/news/scyj/202607/t20260710_36622.html,2026-09-26,false
