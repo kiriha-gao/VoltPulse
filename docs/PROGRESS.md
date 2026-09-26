@@ -19,4 +19,19 @@
 2. 获取一个来源清楚的公开价格样本，保留原始文件与来源信息；若没有完整数据，只报告实际可验证的分析。
 3. 在同一参数口径下比较简单策略与事后最优，并记录一次具体的问题定位和修复过程。
 
-每一步完成后再记录对应的运行证据。未完成的方向保留为计划，不写成已经实现的能力。
+## 2026-09-26：第一轮已完成
+
+1. **展示口径**：README 和 Streamlit 页面已明确合成数据、事后最优与数据来源；定时任务只在有暂存产物时提交，并标为合成演示。相关提交见 [README 调整](https://github.com/kiriha-gao/VoltPulse/commit/c8947aa31231f363aa6ba9a178d2809daae4af6b)、[页面调整](https://github.com/kiriha-gao/VoltPulse/commit/58943c3c51d949d3220f260f7b5cdf2de1f4b6c5)、[任务修复](https://github.com/kiriha-gao/VoltPulse/commit/c5b9ffa8249573f0edc9396bad204533f41d8b59)。
+2. **历史策略**：原实现只给未闭合 SOC 的结果贴上 `TERMINAL_ADJUSTED` 标签。现在调度会在每一步保留到日末目标的可达性，不读取当日价格来决定动作；[修正](https://github.com/kiriha-gao/VoltPulse/commit/e09d05cc85e2b6c4e903d97f7df4ee5076cc3b90)及[针对性测试](https://github.com/kiriha-gao/VoltPulse/commit/3d031c70ce2c7f7de4af6c5a5fbaf594982bb571)已通过 [GitHub 矩阵测试](https://github.com/kiriha-gao/VoltPulse/actions/runs/36220220547)。
+3. **真实披露案例**：从广州电力交易中心四期周报摘录广东发电侧日前、实时加权均价，每行保留原文地址。运行 `python scripts/analyze_public_weekly.py`，得到四期周均价的简单平均：日前 449.00、实时 440.75 元/兆瓦时；逐周日前减实时为 13、32、27、-39 元/兆瓦时。见[案例说明](public_data_case.md)及[矩阵测试](https://github.com/kiriha-gao/VoltPulse/actions/runs/36220500872)。
+
+**边界**：公开案例是周度快报，缺少 6 月 15—21 日一期，也没有日内 96 点价格。它只用于公开数据整理与分析；储能调度仍使用标明为合成的样本。取得可靠的完整分时数据后，才能增加真实价格调度案例。项目净收益不是电站投资回报或完整市场结算账单。
+
+## 面试演示顺序
+
+- 先展示 README 中的问题：看见价差后，储能何时充放电，理论最优为何不能直接执行。
+- 打开[公开周报案例](public_data_case.md)，说明自己如何核对来源、单位和缺失周；运行分析脚本复算四期数字。
+- 打开合成数据看板，指出 SOC 与调度约束，并明确事后最优只是理论对照。
+- 展示历史策略 SOC 修正的提交与测试，讲清“发现错误标签—改成实际调整—用测试确认不偷看当日价格”的过程。
+
+这轮实现有 AI 辅助；对外介绍时应能亲自复现命令并解释每个数字与约束。未取得的分时数据和未做的真实收益验证不写成已完成成果。
