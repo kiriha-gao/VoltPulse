@@ -104,7 +104,7 @@ def run_pipeline(market_name: str = "shandong", target_date: Optional[str] = Non
         fixture_filename = f"{market_name}_sample.csv"
         fixture_path = fixtures_dir / fixture_filename
         if not fixture_path.exists():
-            fixture_path = fixtures_dir / "shandong_sample.csv"
+            raise FileNotFoundError(f"No fixture for market={market_name}: {fixture_path}")
         adapter = _create_market_adapter(market_name, market_cfg, raw_dir, fixture_path=fixture_path)
         logger.info(f"Running in FIXTURE mode: Isolated in sandbox {sandbox_dir} for market={market_name}")
     else:
