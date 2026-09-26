@@ -17,29 +17,19 @@ logger = get_logger("voltpulse.research_report")
 
 def generate_research_report(market: str = "shandong"):
     config = get_config()
-    parquet_prices = config.get_path("spot_prices_parquet")
     output_report_file = project_root / "reports" / "research" / f"voltpulse_{market}_report.md"
     output_report_file.parent.mkdir(parents=True, exist_ok=True)
 
     # Use one filtered price series for every figure in this report.
     if market not in {"jiangsu", "shandong"}:
         raise ValueError(f"Unsupported benchmark market: {market}")
-    if parquet_prices.exists():
-        prices_df = pd.read_parquet(parquet_prices)
-        if "market" in prices_df.columns:
-            prices_df = prices_df[prices_df["market"] == market]
-        else:
-            prices_df = prices_df.iloc[0:0]
-    else:
-        prices_df = pd.DataFrame()
-    if prices_df.empty:
-        fixture_path = project_root / "tests" / "fixtures" / f"{market}_sample.csv"
-        if not fixture_path.exists():
-            raise FileNotFoundError(f"No benchmark data for {market}: {fixture_path}")
-        logger.info(f"Using isolated benchmark fixture from {fixture_path.name}")
-        prices_df = pd.read_csv(fixture_path)
-        if "market" in prices_df.columns:
-            prices_df = prices_df[prices_df["market"] == market]
+    fixture_path = project_root / "tests" / "fixtures" / f"{market}_sample.csv"
+    if not fixture_path.exists():
+        raise FileNotFoundError(f"No benchmark data for {market}: {fixture_path}")
+    logger.info(f"Using benchmark fixture from {fixture_path.name}")
+    prices_df = pd.read_csv(fixture_path)
+    if "market" in prices_df.columns:
+        prices_df = prices_df[prices_df["market"] == market]
     if prices_df.empty:
         raise ValueError(f"No benchmark price rows for {market}")
 
