@@ -155,6 +155,19 @@ python scripts/build_dashboard.py --market shandong
 
 ---
 
+### 5.4 可选 Streamlit 页面
+
+静态网页演示由上面的构建命令生成。若要运行 `app/app.py`：
+
+```bash
+pip install -e ".[dashboard]"
+streamlit run app/app.py
+```
+
+页面会显示所选日期的数据属性；合成数据的收益只用于模型对照。
+
+---
+
 ## 6. 学术引用 (Citation)
 
 如果您在电力现货交易研究、储能配置规划或学术论文中参考了本项目，请按如下格式引用：
