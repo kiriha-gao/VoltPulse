@@ -29,7 +29,9 @@ def _create_market_adapter(market_name: str, market_cfg: dict, raw_dir: Path, fi
     """Factory creating appropriate market ingestion adapter conforming to market name."""
     if market_name == "jiangsu":
         return JiangsuAdapter(market_cfg, raw_dir, fixture_path=fixture_path)
-    return ShandongAdapter(market_cfg, raw_dir, fixture_path=fixture_path)
+    if market_name == "shandong":
+        return ShandongAdapter(market_cfg, raw_dir, fixture_path=fixture_path)
+    raise ValueError(f"Unsupported market: {market_name}")
 
 
 def _atomic_publish(src: Path, dst: Path):
