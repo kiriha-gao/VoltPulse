@@ -250,7 +250,7 @@ def generate_research_report(market: str = "shandong"):
         with open(default_report, "w", encoding="utf-8") as f:
             f.write(report_content)
 
-    logger.info(f"Research technical report successfully generated at {output_report_file}")
+    logger.info(f"Generated {market} report: {num_days} days, min={overall_min_price}, max={overall_max_price}, fixed={total_profit_fix}, perfect_foresight={total_profit_pf}; path={output_report_file}")
     return output_report_file
 
 
