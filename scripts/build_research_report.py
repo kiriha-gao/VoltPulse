@@ -189,7 +189,7 @@ def generate_research_report(market: str = "shandong"):
 ## 5. 储能优化模型 (BESS MILP Formulation)
 采用 HiGHS 求解器进行混合整数线性规划（MILP）调度优化，引入 0-1 二进制充放互斥变量 $u_t \\in \\{{0, 1\\}}$：
 - **目标函数**：
-  $$\\max \\sum_{{t=1}}^{{T}} \\Delta t \\left[ \\lambda_t P_{{dis}}(t) - \\lambda_t P_{{ch}}(t) - c_{{deg}} (\eta_{{ch}} P_{{ch}}(t) + P_{{dis}}(t)/\eta_{{dis}}) \\right]$$
+  $$\\max \\sum_{{t=1}}^{{T}} \\Delta t \\left[ \\lambda_t P_{{dis}}(t) - \\lambda_t P_{{ch}}(t) - c_{{deg}} (\\eta_{{ch}} P_{{ch}}(t) + P_{{dis}}(t)/\\eta_{{dis}}) \\right]$$
 - **充放电功率与互斥约束**：
   $$0 \\le P_{{ch}}(t) \\le u_t \\cdot P_{{rated}}, \\quad 0 \\le P_{{dis}}(t) \\le (1 - u_t) \\cdot P_{{rated}}, \\quad u_t \\in \\{{0, 1\\}}$$
 - **初末荷电守恒**：$E(T) = E(0) = 100 \\, \\text{{MWh}}$；
