@@ -91,7 +91,7 @@ $$\max \sum_{t=1}^T \Delta t \left[ \lambda_t P_{\text{dis}}(t) - \lambda_t P_{\
 
 > [!IMPORTANT]
 > **基准数据属性声明 (Data Provenance & Simulation Truthfulness)**：  
-> 当前版本包含的山东与江苏 14 天日前出清时序均为**为验证不同价格形态下的程序行为而构造的合成基准算例（Benchmark Synthetic Dataset）**，所有数据全局明确标记 `is_simulated = True` 并带有 `synthetic://` 来源标识。  
+> 当前版本包含的山东与江苏 14 天日前出清时序均为**为验证不同价格形态下的程序行为而构造的合成基准算例（Benchmark Synthetic Dataset）**，所有样本明确标记 `is_simulated = True`，并保留 `synthetic://` 或 `fixture://` 来源标识。  
 > 本平台的核心定位是**储能运筹优化模型数学自洽性、HiGHS 求解器性能测试与调度策略对比的算法工程框架**，不声称构成基于电网官方历史结算真实数据的“实证经济学分析”。
 
 在 100MW / 200MWh 储能电站标称参数下，基于两种合成价格情景的 14 天、每日 96 点算例回测对比如下（代码实跑精确输出）：
@@ -135,7 +135,7 @@ pip install -e ".[dev]"
 
 ### 5.2 运行测试套件与技术审查探针
 ```bash
-# 1. 运行 28 项单元测试
+# 1. 运行单元测试
 pytest -v
 
 # 2. 运行独立技术审查探针 (严格断言)
@@ -145,10 +145,10 @@ python scripts/run_extra_probes.py
 
 ### 5.3 编译本地数据看板与日度报告
 ```bash
-# 生成江苏电力现货市场交互看板
+# 生成江苏合成情景交互看板
 python scripts/build_dashboard.py --market jiangsu
 
-# 或生成山东电力现货市场看板
+# 或生成山东合成情景看板
 python scripts/build_dashboard.py --market shandong
 ```
 编译完成后，可在浏览器中直接双击打开 `public/index.html` 即可离线浏览完整交互界面。
