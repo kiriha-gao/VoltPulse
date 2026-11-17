@@ -77,6 +77,10 @@ def build(market: str = "shandong"):
     logger.info(f"Generating daily analytical report for {latest_date}...")
     DailyReportGenerator.generate_report(market, latest_date, metrics_df, backtest_df, reports_dir)
 
+    # Build the companion offline experiment on every dashboard deployment.
+    from build_decision_lab import build as build_decision_lab
+    build_decision_lab(output_dir=public_dir)
+
     logger.info("=" * 60)
     logger.info(f"DASHBOARD BUILD COMPLETE:")
     logger.info(f"- Web Dashboard: file:///{public_html.as_posix()}")

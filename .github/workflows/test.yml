@@ -53,3 +53,6 @@ jobs:
         run: |
           python scripts/build_research_report.py --market shandong
           python scripts/build_research_report.py --market jiangsu
+
+      - name: 9. Verify Offline Decision Lab Builds
+        run: python scripts/build_decision_lab.py
