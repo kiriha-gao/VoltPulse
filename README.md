@@ -25,6 +25,12 @@
 
 改进过程与每一步的完成证据见 [改进记录](docs/PROGRESS.md)。
 
+### 新增：双储能决策实验
+
+当两家储能都希望低买高卖时，一方的行动会怎样影响另一方？[打开交互实验](https://kiriha-gao.github.io/VoltPulse/decision-lab.html)，切换价格情景、收益更新速度和价格反馈强度，回看双方逐轮选择、累计收益与模型价格，导出 CSV/JSON。
+
+这部分提供 18 组可复算的预计算实验，使用现有 14 天合成样本，模型假设和信息边界见[实验说明](docs/decision_lab.md)。本地运行 `python scripts/build_decision_lab.py`，打开 `public/decision-lab.html`；不需要额外依赖或联网加载图表库。
+
 > [!NOTE]
 > 详细的技术选型对比、为什么放弃 PuLP/Pyomo、以及跨平台 CI 换行符避坑经验，请参阅：  
 > 👉 **[设计手记与工程踩坑记录 (NOTES.md)](NOTES.md)**
